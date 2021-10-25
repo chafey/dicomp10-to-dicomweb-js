@@ -129,8 +129,8 @@ const getValueInline = (dataSet, attr, vr) => {
 }
 
 /*
-const getValuePixelData = (dataSet, attr) => {
-    const result = attrDataRefToIon(dataSet, attr)
+const getValuePixelData = (dataSet, attr, vr, callback, options) => {
+    const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
     if(attr.encapsulatedPixelData) {
         result.encapsulatedPixelData = attr.encapsulatedPixelData
     }
@@ -147,7 +147,7 @@ const getValuePixelData = (dataSet, attr) => {
 const getValue = (dataSet, attr, vr, dataSetGen, callback, options) => {
     if(attr.tag === 'x7fe00010') {
         return null
-        //return getValuePixelData(dataSet, attr, callbaclk)
+        //return getValuePixelData(dataSet, attr, vr, callback, options)
     }
     if(attr.items) {
         // sequences
@@ -159,7 +159,8 @@ const getValue = (dataSet, attr, vr, dataSetGen, callback, options) => {
         if(attr.length <= options.maximumInlineDataLength) {
             return getValueInline(dataSet, attr, vr)
         } else {
-            //return attrBulkData(dataSet, attr)
+            const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
+            callback.bulkdata(binaryValue)
         }
     }
 }

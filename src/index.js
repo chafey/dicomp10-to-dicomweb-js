@@ -6,7 +6,7 @@ const getValue = require('./getValue')
 const attributeToJS = (metadata, tag, dataSet, attr, callback, options) => {
     const vr = getVR(attr)
     const value = getValue(dataSet, attr, vr, dataSetGen, callback, options)
-    metadata[tag] = {
+    metadata[tag.substring(1)] = {
         vr: vr,
         Value: value
     }
@@ -17,22 +17,15 @@ const dataSetGen = (dataSet, callback, options) => {
     const metadata = {}
 
     // iterate over dataSet attributes in order
-    console.log(Object.keys(dataSet.elements))
     for(const tag in dataSet.elements) {
         const attr = dataSet.elements[tag]
         attributeToJS(metadata, tag, dataSet, attr, callback, options)
     }
 
-    console.log(metadata)
-
     return {
         metadata: metadata
     }
 }
-
-
-
-
 
 const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
 
@@ -42,11 +35,20 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     // Parse it
     const dataSet = dicomParser.parseDicom(buffer)
 
-    // convert to DICOMweb MetaData and BulkData
-    const result = dataSetGen(dataSet, callback, options)
-    callback.metadata(result.metadata)
+    let bulkDataIndex = 0
+    let imageFrameIndex = 0
+    const generator = {
+        bulkdata: (bulkData) => {
+            callback.bulkdata(bulkDataIndex++, bulkData)
+        },
+        imageFrame: (imageFrame) => {
+            callback.imageFrame(imageFrameIndex++, imageFrame)
+        }
+    }
 
-    // TODO: Generate image frames
+    // convert to DICOMweb MetaData and BulkData
+    const result = dataSetGen(dataSet, generator, options)
+    callback.metadata(result.metadata)
 
     // resolve promise with statistics
     return {}

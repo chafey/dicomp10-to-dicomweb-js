@@ -48,3 +48,8 @@ TODO
 * Add parameter to enable/disable multi-part mime wrapping?
 * Add parameter to enable gzip compressing?
   * Would need to figure out how to remember this
+* Define extensibility mechanism (e.g. for custom data types)
+  * prefix directory with underscore _? (e.g. results from a COVID-19 detection algorithm)
+    * <StudyInstanceUid>/series/<SeriesInstanceUid>/instances/<SOPInstanceUID>/_aistartupco_covid19_detection/result.json
+
+
