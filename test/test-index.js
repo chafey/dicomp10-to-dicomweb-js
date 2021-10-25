@@ -6,7 +6,8 @@ describe('index', async() => {
     let dicomp10stream
 
     beforeEach(async() => {
-        dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_refanddir/IMAGES/REF/CT1_UNC')
+        //dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_refanddir/IMAGES/REF/CT1_UNC')
+        dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_j2k/IMAGES/J2KR/CT1_J2KR')
     })
 
     it('exports', async () => {

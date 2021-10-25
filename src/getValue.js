@@ -56,18 +56,6 @@ const getValueInlineFloatDouble = (dataSet, attr) => {
     }
 }
 
-/*
-const attrDataRefToIon = (dataSet, attr) => {
-    const data = new Uint8Array(dataSet.byteArray.buffer, attr.dataOffset, attr.length)
-    const digest = getHash(data)
-    const result = {
-        dataOffset: attr.dataOffset,
-        length: attr.length,
-        sha256: digest
-    }
-    return result
-}*/
-
 const getValueInlineAttributeTag = (dataSet, attr) => {
     const group = dataSet.uint16(attr.tag, 0)
     const groupHexStr = ("0000" + group.toString(16)).substr(-4)
@@ -128,22 +116,6 @@ const getValueInline = (dataSet, attr, vr) => {
     }
 }
 
-/*
-const getValuePixelData = (dataSet, attr, vr, callback, options) => {
-    const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
-    if(attr.encapsulatedPixelData) {
-        result.encapsulatedPixelData = attr.encapsulatedPixelData
-    }
-    if(attr.basicOffsetTable) {
-        result.basicOffsetTable = attr.basicOffsetTable
-    }
-    if(attr.fragments) {
-        result.fragments = attr.fragments
-    }
-    return result
-}
-*/
-
 const getValue = (dataSet, attr, vr, dataSetGen, callback, options) => {
     if(attr.tag === 'x7fe00010') {
         extractImageFrames(dataSet, attr, vr, dataSetGen, callback, options)
@@ -152,7 +124,7 @@ const getValue = (dataSet, attr, vr, dataSetGen, callback, options) => {
     if(attr.items) {
         // sequences
         return attr.items.map((item) => {
-            return dataSetGen(item.dataSet, options)
+            return dataSetGen(item.dataSet, callback, options)
         })
     } else {
         // non sequence item

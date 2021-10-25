@@ -1,6 +1,7 @@
 const getNumberOfFrames = require('./getNumberOfFrames')
 const getUncompressedImageFrame = require('./getUncompressedImageFrame')
-
+const getEncapsulatedImageFrame = require('./getEncapsulatedImageFrame')
+ 
 const areFramesAreFragmented = (attr, numberOfFrames) => {
     return attr.encapsulatedPixelData && numberOfFrames != attr.fragments.length
 }
@@ -22,14 +23,13 @@ const extractImageFrames = (dataSet, attr, vr, dataSetGen, callback, options) =>
     const uncompressedFrameSize = getFrameSize(dataSet)
     //console.log('uncompressedFrameSize=', uncompressedFrameSize)
 
-    for(let frame = 0; frame < numberOfFrames; frame++) {
-        console.log('extracting frame ', frame)
+    for(let frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
+        //console.log('extracting frame ', frameIndex)
         if(attr.encapsulatedPixelData) {
-            //const compressedImageFrame = getEncapsulatedImageFrame(sopInstance.sourceInfo.uri, pixelData._fields, frame, framesAreFragmented)
-            //const result = await decodeImageFrame(sopInstance.dataSet, compressedImageFrame)
-            //return result
+            const compressedImageFrame = getEncapsulatedImageFrame(dataSet, attr, frameIndex, framesAreFragmented)
+            callback.imageFrame(compressedImageFrame)
         } else {
-            const imageFrame = getUncompressedImageFrame(dataSet, attr, frame, uncompressedFrameSize)
+            const imageFrame = getUncompressedImageFrame(dataSet, attr, frameIndex, uncompressedFrameSize)
             callback.imageFrame(imageFrame)
         }
     }
