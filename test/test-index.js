@@ -7,8 +7,8 @@ describe('index', async() => {
 
     beforeEach(async() => {
         //dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_refanddir/IMAGES/REF/CT1_UNC')
-        //dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_j2k/IMAGES/J2KR/CT1_J2KR')
-        dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/encoding-variants/pixel-data/US_MF_RGB.implicit_little_endian.dcm')
+        dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_j2k/IMAGES/J2KR/CT1_J2KR')
+        //dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/encoding-variants/pixel-data/US_MF_RGB.implicit_little_endian.dcm')
     })
 
     it('exports', async () => {

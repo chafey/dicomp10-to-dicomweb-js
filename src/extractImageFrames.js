@@ -14,7 +14,7 @@ const getFrameSize = (dataSet) => {
     return rows * columns * samplesPerPixel * bitsAllocated / 8
 }
 
-const extractImageFrames = (dataSet, attr, vr, dataSetGen, callback, options) => {
+const extractImageFrames = (dataSet, attr, vr, callback, options) => {
     const numberOfFrames = getNumberOfFrames(dataSet)
 
     const framesAreFragmented = areFramesAreFragmented(attr, numberOfFrames)

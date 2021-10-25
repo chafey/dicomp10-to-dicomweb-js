@@ -24,6 +24,7 @@ const main = async () => {
             bulkDataRootPath = path.join(sopInstanceRootPath, 'bulkdata')
         },
         metadata: (metadata) => {
+            //console.log(metadata)
             const sopMetaDataPath = path.join(sopInstanceRootPath, 'metadata')
             fs.writeFileSync(sopMetaDataPath, JSON.stringify(metadata, null, 2) , 'utf-8')
         },

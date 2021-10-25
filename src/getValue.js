@@ -13,7 +13,7 @@ const getValueInlineSignedShort = (dataSet, attr) => {
     if(attr.length > 2) {
         return getValueInlineBinary(dataSet, attr)
     } else {
-        return dataSet.int16(attr.tag)
+        return [dataSet.int16(attr.tag)]
     }
 }
 
@@ -21,7 +21,7 @@ const getValueInlineUnsignedShort = (dataSet, attr) => {
     if(attr.length > 2) {
         return getValueInlineBinary(dataSet, attr)
     } else {
-        return dataSet.uint16(attr.tag)
+        return [dataSet.uint16(attr.tag)]
     }
 }
 
@@ -29,7 +29,7 @@ const getValueInlineSignedLong = (dataSet, attr) => {
     if(attr.length > 4) {
         return getValueInlineBinary(dataSet, attr)
     } else {
-        return dataSet.int32(attr.tag)
+        return [dataSet.int32(attr.tag)]
     }
 }
 
@@ -37,7 +37,7 @@ const getValueInlineUnsignedLong = (dataSet, attr) => {
     if(attr.length > 4) {
         return getValueInlineBinary(dataSet, attr)
     } else {
-        return dataSet.uint32(attr.tag)
+        return [dataSet.uint32(attr.tag)]
     }
 }
 
@@ -45,14 +45,14 @@ const getValueInlineFloat = (dataSet, attr) => {
     if(attr.length > 4) {
         return getValueInlineBinary(dataSet, attr)
     } else {
-        return dataSet.float(attr.tag)
+        return [dataSet.float(attr.tag)]
     }
 }
 const getValueInlineFloatDouble = (dataSet, attr) => {
     if(attr.length > 8) {
         return getValueInlineBinary(dataSet, attr)
     } else {
-        return dataSet.double(attr.tag)
+        return [dataSet.double(attr.tag)]
     }
 }
 
@@ -116,15 +116,15 @@ const getValueInline = (dataSet, attr, vr) => {
     }
 }
 
-const getValue = (dataSet, attr, vr, dataSetGen, callback, options) => {
+const getValue = (dataSet, attr, vr, getDataSet, callback, options) => {
     if(attr.tag === 'x7fe00010') {
-        extractImageFrames(dataSet, attr, vr, dataSetGen, callback, options)
+        extractImageFrames(dataSet, attr, vr, callback, options)
         return
     }
     if(attr.items) {
         // sequences
         return attr.items.map((item) => {
-            const result = dataSetGen(item.dataSet, callback, options)
+            const result = getDataSet(item.dataSet, callback, options)
             return result.metadata
         })
     } else {

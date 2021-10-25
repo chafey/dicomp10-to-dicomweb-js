@@ -1,31 +1,6 @@
 const dicomParser = require('dicom-parser')
 const asyncIterableToBuffer = require('./asyncIterableToBuffer')
-const getVR = require('./getVR')
-const getValue = require('./getValue')
-
-const attributeToJS = (metadata, tag, dataSet, attr, callback, options) => {
-    const vr = getVR(attr)
-    const value = getValue(dataSet, attr, vr, dataSetGen, callback, options)
-    metadata[tag.substring(1)] = {
-        vr: vr,
-        Value: value
-    }
-}
-
-const dataSetGen = (dataSet, callback, options) => {
-
-    const metadata = {}
-
-    // iterate over dataSet attributes in order
-    for(const tag in dataSet.elements) {
-        const attr = dataSet.elements[tag]
-        attributeToJS(metadata, tag, dataSet, attr, callback, options)
-    }
-
-    return {
-        metadata: metadata
-    }
-}
+const getDataSet = require('./getDataSet')
 
 const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
 
@@ -39,7 +14,8 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     callback.uids({
         studyInstanceUid : dataSet.string('x0020000d'),
         seriesInstanceUid : dataSet.string('x0020000e'),
-        sopInstanceUid : dataSet.string('x00080018')
+        sopInstanceUid : dataSet.string('x00080018'),
+        transferSyntaxUid: dataSet.string('x00020010')
     })
 
     let bulkDataIndex = 0
@@ -54,7 +30,7 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     }
 
     // convert to DICOMweb MetaData and BulkData
-    const result = dataSetGen(dataSet, generator, options)
+    const result = getDataSet(dataSet, generator, options)
     callback.metadata(result.metadata)
 
     // resolve promise with statistics
