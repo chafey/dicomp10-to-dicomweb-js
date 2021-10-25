@@ -1,7 +1,7 @@
 const extractImageFrames = require('./extractImageFrames')
 
 const getValueInlineString = (dataSet, attr) => {
-    return dataSet.string(attr.tag)
+    return [dataSet.string(attr.tag)]
 }
 
 const getValueInlineBinary = (dataSet, attr) => {
@@ -124,7 +124,8 @@ const getValue = (dataSet, attr, vr, dataSetGen, callback, options) => {
     if(attr.items) {
         // sequences
         return attr.items.map((item) => {
-            return dataSetGen(item.dataSet, callback, options)
+            const result = dataSetGen(item.dataSet, callback, options)
+            return result.metadata
         })
     } else {
         // non sequence item
@@ -133,6 +134,7 @@ const getValue = (dataSet, attr, vr, dataSetGen, callback, options) => {
         } else {
             const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
             callback.bulkdata(binaryValue)
+            // TODO: add bulkdata ref to metadata
         }
     }
 }

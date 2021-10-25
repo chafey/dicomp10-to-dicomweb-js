@@ -35,6 +35,13 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     // Parse it
     const dataSet = dicomParser.parseDicom(buffer)
 
+    // Extract uids
+    callback.uids({
+        studyInstanceUid : dataSet.string('x0020000d'),
+        seriesInstanceUid : dataSet.string('x0020000e'),
+        sopInstanceUid : dataSet.string('x00080018')
+    })
+
     let bulkDataIndex = 0
     let imageFrameIndex = 0
     const generator = {

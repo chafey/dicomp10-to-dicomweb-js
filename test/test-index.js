@@ -7,7 +7,8 @@ describe('index', async() => {
 
     beforeEach(async() => {
         //dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_refanddir/IMAGES/REF/CT1_UNC')
-        dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_j2k/IMAGES/J2KR/CT1_J2KR')
+        //dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_j2k/IMAGES/J2KR/CT1_J2KR')
+        dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/encoding-variants/pixel-data/US_MF_RGB.implicit_little_endian.dcm')
     })
 
     it('exports', async () => {
@@ -23,7 +24,8 @@ describe('index', async() => {
         // Arrange
         let metadataCalled =false
         const callback = {
-            metadata: (metadata) => {metadataCalled = true;},// console.log(metadata)},
+            uids: (uids) => {console.log(uids)},
+            metadata: (metadata) => {metadataCalled = true; console.log(metadata)},
             bulkdata: (index, bulkData) => {console.log('bulkdata', index, 'length=', bulkData.length)},
             imageFrame: (index, imageFrame) => {console.log('imageFrame', index, 'length=', imageFrame.length)}
         }
