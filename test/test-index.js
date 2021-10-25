@@ -22,7 +22,7 @@ describe('index', async() => {
         // Arrange
         let metadataCalled =false
         const callback = {
-            metadata: (metadata) => {metadataCalled = true; console.log(metadata)},
+            metadata: (metadata) => {metadataCalled = true;},// console.log(metadata)},
             bulkdata: (index, bulkData) => {console.log('bulkdata', index, 'length=', bulkData.length)},
             imageFrame: (index, imageFrame) => {console.log('imageFrame', index, 'length=', imageFrame.length)}
         }

@@ -1,4 +1,4 @@
-const getVR = require('./getVR')
+const extractImageFrames = require('./extractImageFrames')
 
 const getValueInlineString = (dataSet, attr) => {
     return dataSet.string(attr.tag)
@@ -146,8 +146,8 @@ const getValuePixelData = (dataSet, attr, vr, callback, options) => {
 
 const getValue = (dataSet, attr, vr, dataSetGen, callback, options) => {
     if(attr.tag === 'x7fe00010') {
-        return null
-        //return getValuePixelData(dataSet, attr, vr, callback, options)
+        extractImageFrames(dataSet, attr, vr, dataSetGen, callback, options)
+        return
     }
     if(attr.items) {
         // sequences
