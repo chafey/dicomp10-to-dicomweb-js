@@ -10,3 +10,16 @@ The goal of this project is to convert DICOM P10 into DICOMweb format in a lossl
 
 View the [specification](docs/spec.md)
 
+## Pre-requisites
+
+* NodeJS (v14.18.1 used but earlier/later versions should also)
+* NPM
+
+## TODO
+
+* Create docker container to encapsulate build environment
+* Create test data (DICOM P10 and expected DICOMweb results)
+* Implement the library
+* Implement the CLI
+* Document API
+* Create CI + Publish to NPM
