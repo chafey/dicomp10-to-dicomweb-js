@@ -1,0 +1,15 @@
+{
+  "name": "dicomp10todicomweb",
+  "version": "1.0.0",
+  "description": "CLI to convert DICOM P10 files to DICOMweb files",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "DICOM",
+    "DICOMweb"
+  ],
+  "author": "Chris Hafey <chafey@gmail.com>",
+  "license": "MIT"
+}
