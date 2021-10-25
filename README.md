@@ -18,8 +18,21 @@ View the [specification](docs/spec.md)
 ## TODO
 
 * Create docker container to encapsulate build environment
-* Create test data (DICOM P10 and expected DICOMweb results)
-* Implement the library
-* Implement the CLI
+* Create test data (DICOM P10 and expected DICOMweb results) - Jordan working on this
 * Document API
 * Create CI + Publish to NPM
+* Fix Bugs
+    * Get bulkdata refs written properly
+    * Get PN written properly
+    * Get array of binary numbers written properly
+* Enhance cli
+    * Add support for directory as input
+    * Add support for specifying bulkDataMinSize
+    * Add support for specifying recursive directory search on input
+    * Add support for wrapping bulkdata and image frames with multi-part mime header
+    * Add support for gzip output
+* Enhance library
+    * Write out "info" file
+        * P10 Header
+        * Data needed to recreate original P10 instance
+* Create DICOMweb -> DICOM P10 tool
