@@ -20,6 +20,7 @@ Note - image frames and bulk data are not wrapped in multi-part mime
 * Consider adding transformation capabilities
   * de-identification
   * strip out private data
+* Consider generating rendered frames (check with Markus about this for path)
 
 ## CLI
 
@@ -38,6 +39,7 @@ The cli will generate files in the output directory like this:
 <StudyInstanceUid>/series/<SeriesInstanceUid>/instances/<SOPInstanceUID>/metadata - Metadata in JSON format
 <StudyInstanceUid>/series/<SeriesInstanceUid>/instances/<SOPInstanceUID>/frames/ - Image frames 1..N
 <StudyInstanceUid>/series/<SeriesInstanceUid>/instances/<SOPInstanceUID>/bulkdata - Bulk data items 1..N
+<StudyInstanceUid>/series/<SeriesInstanceUid>/instances/<SOPInstanceUID>/info - info about the conversion - P10 header, gzip encoding, length strategy, etc
 ```
 
 Note - image frames and bulk data are wrapped with multi-part mime headers so they can be streamed directly using a simple HTTP server

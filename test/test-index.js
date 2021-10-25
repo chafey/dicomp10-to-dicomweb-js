@@ -1,8 +1,12 @@
-const assert = require('assert')
 const dicomp10todicomweb = require('../src/index')
+const assert = require('assert')
+const fs = require('fs')
 
 describe('index', async() => {
-    before(async() => {
+    let dicomp10stream
+
+    beforeEach(async() => {
+        dicomp10stream = fs.createReadStream('../dagcom-test-data/dicom/WG04/compsamples_refanddir/IMAGES/REF/CT1_UNC')
     })
 
     it('exports', async () => {
@@ -13,5 +17,25 @@ describe('index', async() => {
         // Assert
         assert.notStrictEqual(dicomp10todicomweb, undefined)
     })
+
+    it('returns metadata object', async () => {
+        // Arrange
+        let metadataCalled =false
+        const callback = {
+            metadata: (metadata) => {metadataCalled = true},
+            bulkdata: (bulkData) => {},
+            imageFrame: (imageFrame) => {}
+        }
+        const options = {
+            maximumInlineDataLength: 128
+        }
+
+        // Act
+        await dicomp10todicomweb(dicomp10stream, callback, options)
+
+        // Assert
+        assert.equal(metadataCalled, true)
+    })
+
 
 })
