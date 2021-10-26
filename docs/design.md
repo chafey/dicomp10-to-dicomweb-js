@@ -10,6 +10,6 @@
   * Easier to build more complex systems from
 * Built to be extensible
   * Hooks to transform data
-    * Implement work arounds for non standards compliant data sets
+    * Implement work arounds for non standard compliant data sets
     * Implement custom logic (e.g. proprietary compression of image frames)
     * Implement de-identification
