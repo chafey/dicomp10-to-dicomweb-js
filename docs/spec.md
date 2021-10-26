@@ -2,25 +2,28 @@
 
 ## Library
 
-This library takes as input a DICOM P10 bitstream and produces bit streams for the following:
-* Metadata - JavaScript Object
+This library takes as input a DICOM P10 bitstream and produces the following:
+* Summary Metadata - Javascript object with Study UID, Series UID, SOP Instance UID, Transfer Syntax, etc
 * Image Frames - binary data of each image frame in the stored transfer syntax 
-* bulk data - any metadata tags that are longer than a certain size (default 128 bytes) 
+* Bulk Data - binary data for values larger than the configured inline length
+* Full Metadata - JavaScript object that serializes to DICOMweb JSON format
 
-Note - image frames and bulk data are not wrapped in multi-part mime 
+Note - image frames and bulk data are not wrapped in multi-part mime headers
 
 ### TODO
 
-* Document API
+* Error handling
+* Extensibility mechanisms
+  * Custom transformations
+  * Strip out private data
+  * De-identification
 * Figure out how to store the P10 header (e.g. transfer syntax uid)?
 * Consider storing encoding details so original P10 can be recreated without any loss
   * undefined lengths
   * frame fragmentation
   * basic offset table
-* Consider adding transformation capabilities
-  * de-identification
-  * strip out private data
 * Consider generating rendered frames (check with Markus about this for path)
+* Document API
 
 ## CLI
 
@@ -28,8 +31,8 @@ Included is an example cli that uses this library takes converts a DICOM P10 fil
 the DICOMweb URI pattern.  These files can be served up using a standard HTTP server and will be DICOMweb compliant
 
 Parameters:
-* --input <path to DICOM P10 file or directory of DICOM P10 files>
-* --output <path to store DICOMweb format>
+* <path to DICOM P10 file or directory of DICOM P10 files>
+* <path to store DICOMweb format>
 * --bulkDataMinSize <size of attributes to generate as bulk data>
 * --recursive - recursively scans directories for DICOM P10 files
 
@@ -46,7 +49,7 @@ Note - image frames and bulk data are wrapped with multi-part mime headers so th
 
 TODO
 * Add parameter to enable/disable multi-part mime wrapping?
-* Add parameter to enable gzip compressing?
+* Add parameter to enable gzip compression?
   * Would need to figure out how to remember this
 * Define extensibility mechanism (e.g. for custom data types)
   * prefix directory with underscore _? (e.g. results from a COVID-19 detection algorithm)

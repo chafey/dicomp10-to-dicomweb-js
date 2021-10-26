@@ -1,25 +1,25 @@
 # dicomp10-to-dicomweb-js
-Code to convert from a DICOM P10 bitstream to dicomweb format (json metadata + frames + bulkdata)
 
 Status: Alpha - in development (as of Oct 25, 2021)
 
-The goal of this project is to convert DICOM P10 into DICOMweb format in a lossless manner.  This would enable the following:
-* A web friendly archive format (no need for a DICOM Parser!)
-* Recreation of DICOM P10
-  * Semantic equivalence
-  * bit for bit equivalence (nice to have)
-* Ability to stream the archive format out via HTTP directly and be compatible with a subset of DICOMweb WADO-RS
-* More effecient metadata updates (e.g. patient name)
-* More efficient image access (no need to scan through DICOM P10 to access frames, or store the offsets of each frame separately) 
+The scope of this project is to convert DICOM P10 into a format into a DICOMweb compatible format - specifically JSON metadata, frames and bulkdata.  This library will enable the following:
+* Building of DICOMweb compliant services
+  * Ability to stream the data for "on the fly" use cases
+* Ability to pregenerate DICOMweb responses and store them so they can be served up with a standard HTTP server to implement a subset of DICOMweb
+* To explore an alternative archive format that is web friendl (no need for a DICOM parser)
+  * Should be able to recreate DICOM P10 file from this data (semantic equivalence or possibly bit for bit equivalent)
+  * Will make updates more efficient (e.g. updating patient name just requires updating metadata)
+  * More efficient image access (no need to scan through DICOM P10 to access frames, or store the offsets of each frame separately and seek to them) 
 
-This library is intended to be a building block for more complex systems and therefore limited in scope
-to the minimum functionality that is still useful.  Other functionality that can be built on top of this
-library includes:
-* Series metadata
-* Study metadata
-* QIDO-RS Study queries
+The scope of this library is limited to:
+* Taking as input a single sop instances - it will not directly support series or study metadata generation, QIDO-RS, STOW-RS, WADO-RS image rendering, etc
+* Generating the minimum output in DICOMweb format that can be used to rebuild the sop instance in DICOM P10 format
 
-View the [specification](docs/spec.md)
+View the [design rationale](docs/design.md) for more information on the scope
+
+View [frequently asked questions](docs/faq.md)
+
+View [specification](docs/spec.md)
 
 ## Pre-requisites
 
