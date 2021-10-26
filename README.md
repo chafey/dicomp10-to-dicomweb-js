@@ -10,7 +10,7 @@ The goal of this project is to convert DICOM P10 into DICOMweb format in a lossl
   * bit for bit equivalence (nice to have)
 * Ability to stream the archive format out via HTTP directly and be compatible with a subset of DICOMweb WADO-RS
 * More effecient metadata updates (e.g. patient name)
-* More efficient image access
+* More efficient image access (no need to scan through DICOM P10 to access frames, or store the offsets of each frame separately) 
 
 This library is intended to be a building block for more complex systems and therefore limited in scope
 to the minimum functionality that is still useful.  Other functionality that can be built on top of this
@@ -26,6 +26,16 @@ View the [specification](docs/spec.md)
 * NodeJS (v14.18.1 used but earlier/later versions should also)
 * NPM
 
+## Running Unit Tests
+
+> npm run test
+
+A visual studio code build task is also included so you can run it from there with "Terminal->Run Build Task" (Shift+Command+B)
+
+## Running the CLI
+
+See [dicomp10todicomweb example](examples/dicomp10todicomweb/README.md)
+
 ## TODO (Looking for help here!!)
 
 * Create docker container to encapsulate build environment
@@ -35,7 +45,7 @@ View the [specification](docs/spec.md)
 * Fix Bugs
     * Get bulkdata refs written properly
     * Get PN written properly
-    * Get array of binary numbers written properly
+    * Get multi-valued values written properly
 * Enhance cli
     * Add support for directory as input
     * Add support for specifying bulkDataMinSize
