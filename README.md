@@ -6,7 +6,7 @@ The scope of this project is to convert DICOM P10 into a format into a DICOMweb 
 * Building of DICOMweb compliant services
   * Ability to stream the data for "on the fly" use cases
 * Ability to pregenerate DICOMweb responses and store them so they can be served up with a standard HTTP server to implement a subset of DICOMweb WADO-RS, specifically:
-  * Retrieve instance metadata
+  * Retrieve instance metadata 
   * Retrieve frames in an instance
   * Retrieve bulk data
 * To explore an alternative archive format that is web friendly (no need for a DICOM parser)
@@ -17,6 +17,7 @@ The scope of this project is to convert DICOM P10 into a format into a DICOMweb 
 The scope of this library is limited to:
 * Taking as input a single sop instance - it will not directly support series or study metadata generation
 * Generating the minimum output in DICOMweb format that can be used to rebuild the sop instance in DICOM P10 format
+  * No support for image rendering, transcoding, etc - those can be implemented on top of this library
 
 View the [design rationale](docs/design.md) for more information on the scope
 

@@ -23,6 +23,9 @@ Note - image frames and bulk data are not wrapped in multi-part mime headers
   * frame fragmentation
   * basic offset table
 * Consider generating rendered frames (check with Markus about this for path)
+* Consider allowing caller to specify which tags to include in the summary metadata
+* Consider providing context about each bulkdata (e.g. tag path)
+* Consider providing context about each image frame (frame number), image module (rows, columns, bits stored, number of components, etc)
 * Document API
 
 ## CLI
@@ -54,5 +57,3 @@ TODO
 * Define extensibility mechanism (e.g. for custom data types)
   * prefix directory with underscore _? (e.g. results from a COVID-19 detection algorithm)
     * <StudyInstanceUid>/series/<SeriesInstanceUid>/instances/<SOPInstanceUID>/_aistartupco_covid19_detection/result.json
-
-
