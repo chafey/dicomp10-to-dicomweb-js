@@ -36,35 +36,44 @@ const main = async () => {
         maximumInlineDataLength: 128
     }
 
-    let sopInstanceRootPath
-    let imageFrameRootPath
-    let bulkDataRootPath
 
     const callback = {
         uids: (uids) => {
-            sopInstanceRootPath = path.join(directoryName, uids.studyInstanceUid, 'series', uids.seriesInstanceUid, 'instances', uids.sopInstanceUid)
+            const seriesPath = path.join(directoryName, 'studies', uids.studyInstanceUid, 'series', uids.seriesInstanceUid)
+            const sopInstanceRootPath = path.join(seriesPath, 'instances', uids.sopInstanceUid)
             fs.mkdirSync(sopInstanceRootPath, { recursive: true })
-            imageFrameRootPath = path.join(sopInstanceRootPath, 'frames')
-            bulkDataRootPath = path.join(sopInstanceRootPath, 'bulkdata')
+            const imageFrameRootPath = path.join(sopInstanceRootPath, 'frames')
+            const bulkDataRootPath = path.join(seriesPath, 'bulkdata')
+            return {
+                ...uids,
+                seriesPath,
+                sopInstanceRootPath,
+                imageFrameRootPath,
+                bulkDataRootPath,
+            }
         },
-        metadata: (metadata) => {
+        metadata: (id, metadata) => {
             // console.log(metadata)
-            const sopMetaDataPath = path.join(sopInstanceRootPath, 'metadata')
+            const sopMetaDataPath = path.join(id.sopInstanceRootPath, 'metadata.json')
             fs.writeFileSync(sopMetaDataPath, JSON.stringify(metadata, null, 2) , 'utf-8')
+            return sopMetaDataPath
         },
-        bulkdata: (index, bulkData) => {
-            if(!fs.existsSync(bulkDataRootPath)) {
-                fs.mkdirSync(bulkDataRootPath, { recursive: true })
+        bulkdata: (id, index, bulkData) => {
+            if(!fs.existsSync(id.bulkDataRootPath)) {
+                fs.mkdirSync(id.bulkDataRootPath, { recursive: true })
             }
-            const bulkDataPath = path.join(bulkDataRootPath, '' + index)
+            // TODO - fix this path
+            const bulkDataPath = path.join(id.bulkDataRootPath, '' + index)
             fs.writeFileSync(bulkDataPath, bulkData)
+            return '../../'+bulkDataPath
         },
-        imageFrame: (index, imageFrame) => {
-            if(!fs.existsSync(imageFrameRootPath)) {
-                fs.mkdirSync(imageFrameRootPath, { recursive: true })
+        imageFrame: (id, index, imageFrame) => {
+            if(!fs.existsSync(id.imageFrameRootPath)) {
+                fs.mkdirSync(id.imageFrameRootPath, { recursive: true })
             }
-            const imageFramePath = path.join(imageFrameRootPath, '' + index)
+            const imageFramePath = path.join(id.imageFrameRootPath, '' + index)
             fs.writeFileSync(imageFramePath, imageFrame)
+            return id.imageFrameRootPath
         }
     }
 
@@ -86,7 +95,7 @@ const processFiles = async (files,callback, options) => {
             const dicomp10stream = fs.createReadStream(file);
             await dicomp10todicomweb(dicomp10stream, callback, options);
           } catch(e) {
-              console.error("Couldn't process", file);
+              console.error("Couldn't process", file, e);
           }
         }
     }

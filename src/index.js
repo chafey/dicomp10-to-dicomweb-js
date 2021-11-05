@@ -21,16 +21,16 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     let imageFrameIndex = 0
     const generator = {
         bulkdata: (bulkData) => {
-            callback.bulkdata(bulkDataIndex++, bulkData)
+            callback.bulkdata(id, bulkDataIndex++, bulkData)
         },
         imageFrame: (imageFrame) => {
-            callback.imageFrame(imageFrameIndex++, imageFrame)
+            callback.imageFrame(id, imageFrameIndex++, imageFrame)
         }
     }
 
     // convert to DICOMweb MetaData and BulkData
     const result = getDataSet(dataSet, generator, options)
-    callback.metadata(result.metadata)
+    callback.metadata(id, result.metadata)
 
     // resolve promise with statistics
     return {}
