@@ -11,5 +11,6 @@
 * Built to be extensible
   * Hooks to transform data
     * Implement work arounds for non standard compliant data sets
-    * Implement custom logic (e.g. proprietary compression of image frames)
+    * Implement custom logic (e.g. re-compression of image frames to a proprietary or other format)
     * Implement de-identification
+    * Implement de-duplication

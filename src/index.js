@@ -3,7 +3,6 @@ const asyncIterableToBuffer = require('./asyncIterableToBuffer')
 const getDataSet = require('./getDataSet')
 
 const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
-
     // Read dicomp10 stream into buffer
     const buffer = await asyncIterableToBuffer(dicomp10stream)
 
@@ -11,7 +10,7 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     const dataSet = dicomParser.parseDicom(buffer)
 
     // Extract uids
-    callback.uids({
+    const id = callback.uids({
         studyInstanceUid : dataSet.string('x0020000d'),
         seriesInstanceUid : dataSet.string('x0020000e'),
         sopInstanceUid : dataSet.string('x00080018'),
