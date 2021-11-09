@@ -27,10 +27,10 @@ const extractImageFrames = (dataSet, attr, vr, callback, options) => {
         //console.log('extracting frame ', frameIndex)
         if(attr.encapsulatedPixelData) {
             const compressedImageFrame = getEncapsulatedImageFrame(dataSet, attr, frameIndex, framesAreFragmented)
-            callback.imageFrame(compressedImageFrame)
+            callback.imageFrame(compressedImageFrame, {dataSet})
         } else {
             const imageFrame = getUncompressedImageFrame(dataSet, attr, frameIndex, uncompressedFrameSize)
-            callback.imageFrame(imageFrame)
+            callback.imageFrame(imageFrame, {dataSet})
         }
     }
 }

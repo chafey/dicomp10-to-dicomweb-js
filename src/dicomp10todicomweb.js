@@ -1,10 +1,11 @@
 const dicomp10todicomweb = require('./index')
 const fs = require('fs')
 const path = require('path');
+const { JSONWriter } = require('./index');
 
 const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
 
-const {HashDataWriter, DeduplicateWriter, InstanceDeduplicate } = dicomp10todicomweb;
+const {HashDataWriter, CompleteStudyWriter, DeduplicateWriter, InstanceDeduplicate, ImageFrameWriter } = dicomp10todicomweb;
 
 const allArgs = {};
 
@@ -75,35 +76,29 @@ const main = async () => {
                 imageFrameRootPath,
             }
         },
-        metadata: (id, metadata) => {
-            // console.log(metadata)
-            if( deduplicate && !isInstances ) return;
-            const sopMetaDataPath = path.join(id.sopInstanceRootPath, 'metadata.json')
-            console.log('Writing metadata to', sopMetaDataPath);
-            fs.writeFileSync(sopMetaDataPath, JSON.stringify(metadata, null, 2) , 'utf-8')
-            return sopMetaDataPath
-        },
+        metadata: async (id, metadata) => await JSONWriter(id.sopInstanceRootPath,'metadata',metadata), 
         bulkdata: async (id, index, bulkData) => await HashDataWriter(id,index,bulkData),
-        imageFrame: (id, index, imageFrame) => {
-            if(!fs.existsSync(id.imageFrameRootPath)) {
-                fs.mkdirSync(id.imageFrameRootPath, { recursive: true })
-            }
-            const imageFramePath = path.join(id.imageFrameRootPath, '' + index)
-            fs.writeFileSync(imageFramePath, imageFrame)
-            return id.imageFrameRootPath
-        },
+        imageFrame: ImageFrameWriter,
+        completeStudy: () => {
+            this.studyInstanceUid = null;
+            this.deduplicatedInstances = null;
+            this.extractData = null;
+        }
     }
 
     if( deduplicate ) {
+        callback.completeStudy = CompleteStudyWriter;
         callback.hashdata = HashDataWriter;
-        callback.deduplicated = DeduplicateWriter();
-        callback.metadata = new InstanceDeduplicate(callback).bindMetadata();
+        callback.deduplicated = DeduplicateWriter;
+        callback.metadata = InstanceDeduplicate;
     }
+    console.log('callback=', callback);
 
     await processFiles(files, callback,options);
 
     // Finalize things if needed
-    if(callback.deduplicated ) callback.deduplicated({});
+    await callback.completeStudy();
+    await JSONWriter(path.join(directoryName),"studies", callback.allStudies);
 }
 
 const processFiles = async (files,callback, options) => {

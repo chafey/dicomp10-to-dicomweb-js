@@ -1,59 +1,47 @@
 const TagLists = require('./TagLists');
 const Tags = require('./Tags');
 
+const extractors = { patient: TagLists.PatientQuery, study: TagLists.StudyQuery, series: TagLists.SeriesExtract };
+
 /**
  * This is an instance listener - the way this one works is that it listens for instance metadata.
  * Every time an instance metadata event is fired, it deduplicates a bunch of data, firing deduplicate events,
  * and then collects the deduplicate data into a list.
  * Whenever the study UID changes, a new event is fired to indicate the deduplicated data is ready.
  */
-class InstanceDeduplicate {
-    constructor(existingListeners) {
-        this.previousMetadata = existingListeners.metadata;
-        this.listeners = existingListeners;
-    }
+async function deduplicateSingleInstance(id, imageFrame) {
+    if (!imageFrame) return;
+    const deduplicated = {...imageFrame};
+    const options = { remove: false, hash: true };
 
-    bindMetadata() {
-        return this.metadata.bind(this);
+    if( !this.extractors ) this.extractors = extractors;
+    for (const key of Object.keys(this.extractors)) {
+        const extracted = TagLists.extract(deduplicated, key, this.extractors[key], options);
+        const hashKey = extracted[Tags.DeduppedHash].Value[0];
+        this.bulkdata(id, key, extracted);
+        this.extractData[hashKey] = extracted;
     }
+    console.log('Pushing instance', id.studyInstanceUid);
+    this.deduplicatedInstances.push(deduplicated);
+    return deduplicated;
+}
 
-    /** Writes out the study deduplicated data */
-    finalizeStudy() {
-        console.log('Finalizing study with', this.deduplicated.length, 'instances');
-        this.studyUID = null;
-        this.deduplicated = null;
-        this.extractData = null;
+async function InstanceDeduplicate(id, imageFrame) {
+    // Notify the existing listeners, if any
+    const { studyInstanceUid } = id;
+    if (this.instanceMetadata) await this.instanceMetadata(id, index, imageFrame);
+    if (this.studyInstanceUid && studyInstanceUid !== this.studyInstanceUid) {
+        await this.completeStudy();
     }
-
-    extractors = { patient: TagLists.PatientQuery, study: TagLists.StudyQuery, series: TagLists.SeriesQuery};
-
-    async deduplicateInstance(id, imageFrame) {
-        const deduplicated = Object.assign({}, imageFrame);
-        const options = {remove:true,hash:true};
-        
-        for(const key of Object.keys(this.extractors) ) {
-            const extracted = TagLists.extract(deduplicated, this.extractors[key], options);
-            this.listeners.bulkdata(id,key, extracted);
-        }
-        return deduplicated;
+    if (!this.studyInstanceUid) {
+        this.deduplicatedInstances = [];
+        this.extractData = {};
+        this.id = id;
+        this.studyInstanceUid = studyInstanceUid;
     }
-
-    async metadata(id, imageFrame) {
-        // Notify the existing listeners, if any
-        if( this.existingListeners ) await existingListeners(id,index,imageFrame);
-        const {studyInstanceUID } = id;
-        if( this.studyUID && !studyInstanceUID==this.studyUID ) {
-            this.finalizeStudy();
-        }
-        if( !this.studyUID ) {
-            this.deduplicated = [];
-            this.extractData = {};
-            this.studyUID = studyInstanceUID;
-        }
-        const deduppedInstance = await this.deduplicateInstance(id,imageFrame);
-        const { deduplicated } = this.listeners;
-        deduplicated(id,deduppedInstance);
-    }
+    if (!this.deduplicateSingleInstance) this.deduplicateSingleInstance = deduplicateSingleInstance;
+    const deduppedInstance = await this.deduplicateSingleInstance(id, imageFrame);
+    await this.deduplicated(id, deduppedInstance);
 }
 
 module.exports = InstanceDeduplicate;

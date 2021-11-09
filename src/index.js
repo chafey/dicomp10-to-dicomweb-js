@@ -5,6 +5,8 @@ const JSONWriter = require('./JSONWriter')
 const InstanceDeduplicate = require('./InstanceDeduplicate')
 const DeduplicateWriter = require('./DeduplicateWriter')
 const HashDataWriter = require('./HashDataWriter')
+const ImageFrameWriter = require('./ImageFrameWriter');
+const CompleteStudyWriter = require('./CompleteStudyWriter');
 
 const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     // Read dicomp10 stream into buffer
@@ -34,7 +36,7 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     }
 
     // convert to DICOMweb MetaData and BulkData
-    const result = getDataSet(dataSet, generator, options)
+    const result = getDataSet(dataSet, generator, options);
     await callback.metadata(id, result.metadata)
 
     // resolve promise with statistics
@@ -46,5 +48,7 @@ dicomp10todicomweb.JSONWriter = JSONWriter;
 dicomp10todicomweb.HashDataWriter = HashDataWriter;
 dicomp10todicomweb.DeduplicateWriter = DeduplicateWriter;
 dicomp10todicomweb.InstanceDeduplicate = InstanceDeduplicate;
+dicomp10todicomweb.ImageFrameWriter = ImageFrameWriter;
+dicomp10todicomweb.CompleteStudyWriter = CompleteStudyWriter;
 
 module.exports = dicomp10todicomweb

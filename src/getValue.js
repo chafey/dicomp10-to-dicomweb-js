@@ -4,6 +4,10 @@ const getValueInlineString = (dataSet, attr) => {
     return [dataSet.string(attr.tag)]
 }
 
+const getValuePatientName = (dataSet, attr) => {
+    return [{Alphabetic: dataSet.string(attr.tag)}]
+}
+
 const getValueInlineBinary = (dataSet, attr) => {
     const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
     return binaryValue.toString('base64')
@@ -93,6 +97,7 @@ const getValueInline = (dataSet, attr, vr) => {
         case 'OW':
             return getValueInlineBinary(dataSet, attr)
         case 'PN': 
+            return getValuePatientName(dataSet, attr);
         case 'SH': 
             return getValueInlineString(dataSet, attr)
         case 'SL':
