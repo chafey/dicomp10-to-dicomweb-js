@@ -7,6 +7,7 @@ const DeduplicateWriter = require('./DeduplicateWriter')
 const HashDataWriter = require('./HashDataWriter')
 const ImageFrameWriter = require('./ImageFrameWriter');
 const CompleteStudyWriter = require('./CompleteStudyWriter');
+const JSONReader = require('./JSONReader');
 
 const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     // Read dicomp10 stream into buffer
@@ -50,5 +51,6 @@ dicomp10todicomweb.DeduplicateWriter = DeduplicateWriter;
 dicomp10todicomweb.InstanceDeduplicate = InstanceDeduplicate;
 dicomp10todicomweb.ImageFrameWriter = ImageFrameWriter;
 dicomp10todicomweb.CompleteStudyWriter = CompleteStudyWriter;
+dicomp10todicomweb.JSONReader = JSONReader;
 
 module.exports = dicomp10todicomweb

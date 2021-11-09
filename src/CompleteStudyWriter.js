@@ -2,6 +2,7 @@ const TagLists = require('./TagLists');
 const JSONWriter = require('./JSONWriter');
 const path = require('path');
 const Tags = require('./Tags');
+const { studyInstanceUid } = require('./DeduplicateWriter');
 
 /**
  * CompleteStudyWriter takes the deduplicated data values, all loaded into the study parameter,
@@ -60,7 +61,14 @@ async function CompleteStudyWriter() {
     await JSONWriter(studyPath,'studies',[studyQuery]);
 
     if( !this.allStudies ) this.allStudies = [];
-    this.allStudies.push(studyQuery);
+    const studyUID = studyQuery[Tags.StudyInstanceUID].Value[0];
+    const studyIndex = this.allStudies.findIndex(item=> item[Tags.StudyInstanceUID].Value[0]==studyUID);
+    if( studyIndex==-1 ) {
+        this.allStudies.push(studyQuery);    
+    } else {
+        this.allStudies[studyIndex] = studyQuery;
+    }
+    this.allStudies[studyIndex] = studyQuery;
     delete this.deduplicatedInstances;
     delete this.extractData;
     delete this.id;

@@ -21,7 +21,6 @@ async function deduplicateSingleInstance(id, imageFrame) {
         this.bulkdata(id, key, extracted);
         this.extractData[hashKey] = extracted;
     }
-    console.log('Pushing instance', id.studyInstanceUid);
     this.deduplicatedInstances.push(deduplicated);
     return deduplicated;
 }

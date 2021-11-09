@@ -16,15 +16,10 @@ const getFrameSize = (dataSet) => {
 
 const extractImageFrames = (dataSet, attr, vr, callback, options) => {
     const numberOfFrames = getNumberOfFrames(dataSet)
-
     const framesAreFragmented = areFramesAreFragmented(attr, numberOfFrames)
-    //console.log('framesAreFragmented=', framesAreFragmented)
-
     const uncompressedFrameSize = getFrameSize(dataSet)
-    //console.log('uncompressedFrameSize=', uncompressedFrameSize)
 
     for(let frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
-        //console.log('extracting frame ', frameIndex)
         if(attr.encapsulatedPixelData) {
             const compressedImageFrame = getEncapsulatedImageFrame(dataSet, attr, frameIndex, framesAreFragmented)
             callback.imageFrame(compressedImageFrame, {dataSet})

@@ -5,7 +5,7 @@ const { JSONWriter } = require('./index');
 
 const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
 
-const {HashDataWriter, CompleteStudyWriter, DeduplicateWriter, InstanceDeduplicate, ImageFrameWriter } = dicomp10todicomweb;
+const {JSONReader, HashDataWriter, CompleteStudyWriter, DeduplicateWriter, InstanceDeduplicate, ImageFrameWriter } = dicomp10todicomweb;
 
 const allArgs = {};
 
@@ -92,13 +92,15 @@ const main = async () => {
         callback.deduplicated = DeduplicateWriter;
         callback.metadata = InstanceDeduplicate;
     }
-    console.log('callback=', callback);
+    
+    callback.allStudies = await JSONReader(directoryName, "studies.gz", []);
 
     await processFiles(files, callback,options);
 
     // Finalize things if needed
     await callback.completeStudy();
-    await JSONWriter(path.join(directoryName),"studies", callback.allStudies);
+    console.log(`There are ${callback.allStudies.length} studies`);
+    await JSONWriter(directoryName,"studies", callback.allStudies);
 }
 
 const processFiles = async (files,callback, options) => {

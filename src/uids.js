@@ -1,8 +1,8 @@
 const octetStream = 'application/octet-stream';
 const uncompressed = {uncompressed:true, gzip: true, contentType: octetStream};
 const jpeg = 'image/jpeg';
-const jls = 'image/jls';
-const jll = 'image/jll';
+const jls = 'image/x-jls';
+const jll = 'image/jpeg';
 
 const uids = {
     '1.2.840.10008.1.2': uncompressed,

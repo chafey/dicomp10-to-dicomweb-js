@@ -12,12 +12,10 @@ const JSONWriter = async (dir, name, data, options = {gzip:true}) => {
     const rawStream = fs.createWriteStream(fileName)
     let writeStream;
     if( options.gzip ) {
-        console.log('Writing gzip stream to', fileName);
         writeStream = zlib.createGzip();
         writeStream.on('error', err => console.warn('Error:',err));
         writeStream.pipe(rawStream);
     } else {
-        console.log('Writing raw JSON stream to', fileName);
         writeStream = rawStream;
     }
     await writeStream.write(JSON.stringify(data, null, 1));

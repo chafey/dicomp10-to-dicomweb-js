@@ -14,13 +14,13 @@ const ImageFrameWriter = async (id, index, imageFrame) => {
     const fileName = path.join(id.imageFrameRootPath, '' + (1+index))
     let writeStream;
     if( type.gzip ) {
-        console.log('Writing gzip stream to', fileName);
+        console.log('Writing gzip stream to', fileName, contentType);
         const rawStream = fs.createWriteStream(fileName+'.gz');
         writeStream = zlib.createGzip();
         writeStream.on('error', err => console.warn('Error:',err));
         writeStream.pipe(rawStream);
     } else {
-        console.log('Writing raw output stream to', fileName);
+        console.log('Writing raw output stream to', fileName, contentType);
         writeStream = fs.createWriteStream(fileName);
     }
     await writeStream.write('--BOUNDARY_FIXED_32934857949532587\r\n');

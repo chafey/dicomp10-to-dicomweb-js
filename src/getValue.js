@@ -52,6 +52,11 @@ const getValueInlineFloat = (dataSet, attr) => {
         return [dataSet.float(attr.tag)]
     }
 }
+
+const getValueInlineIntString = (dataSet, attr) => {
+    return getValueInlineString(dataSet,attr).map(val => parseInt(val));
+}
+
 const getValueInlineFloatDouble = (dataSet, attr) => {
     if(attr.length > 8) {
         return getValueInlineBinary(dataSet, attr)
@@ -89,6 +94,7 @@ const getValueInline = (dataSet, attr, vr) => {
         case 'FD':
             return getValueInlineFloatDouble(dataSet, attr)
         case 'IS': 
+            return getValueInlineIntString(dataSet,attr);
         case 'LO': 
         case 'LT': 
             return getValueInlineString(dataSet, attr)
