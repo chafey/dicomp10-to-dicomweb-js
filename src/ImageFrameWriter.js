@@ -9,8 +9,7 @@ const ImageFrameWriter = async (id, index, imageFrame) => {
     }
     const {transferSyntaxUid} = id;
     const type = uids[transferSyntaxUid] || uids.default;
-    const typeField = type.contentType && `; type="${type.contentType}"` || '';
-    const contentType = `Content-Type: ${type.contentType}${typeField}; transfer-syntax=${transferSyntaxUid}\r\n`
+    const contentType = `Content-Type: ${type.contentType};transfer-syntax=${transferSyntaxUid}\r\n`
     const fileName = path.join(id.imageFrameRootPath, '' + (1+index))
     let writeStream;
     if( type.gzip ) {
@@ -25,9 +24,10 @@ const ImageFrameWriter = async (id, index, imageFrame) => {
     }
     await writeStream.write('--BOUNDARY_FIXED_32934857949532587\r\n');
     await writeStream.write(contentType);
-    await writeStream.write(`Content-Length: ${imageFrame.length}\r\n\r\n`);
+    // await writeStream.write(`Content-Length: ${imageFrame.length}\r\n\r\n`);
+    await writeStream.write('\r\n');
     await writeStream.write(imageFrame);
-    await writeStream.write('\r\n--BOUNDARY_FIXED_32934857949532587--\r\n');
+    await writeStream.write('\r\n--BOUNDARY_FIXED_32934857949532587--');
     await writeStream.end();
     return id.imageFrameRootPath;
 };

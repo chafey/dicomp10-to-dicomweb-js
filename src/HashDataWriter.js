@@ -36,7 +36,7 @@ HashDataWriter.createHashPath = (data) => {
     const isRaw = ArrayBuffer.isView(data);
     const extension = isRaw ? '.raw' : '.json';
     const hashValue = hash(data);
-    return hashValue.substring(0,3) + '/' + hashValue.substring(3,5) + '/' + hashValue.substring(5) + extension;
+    return path.join('../../../../bulkdata/',hashValue.substring(0,3),hashValue.substring(3,5),hashValue.substring(5) + extension);
 }
 
 module.exports = HashDataWriter;

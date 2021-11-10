@@ -4,13 +4,17 @@ const getValueInlineString = (dataSet, attr) => {
     return [dataSet.string(attr.tag)]
 }
 
+const getStrings = (dataSet, attr) => {
+    return dataSet.string(attr.tag).split('\\');
+}
+
 const getValuePatientName = (dataSet, attr) => {
-    return [{Alphabetic: dataSet.string(attr.tag)}]
+    return getStrings(dataSet,attr).map(item => {Alphabetic: item});
 }
 
 const getValueInlineBinary = (dataSet, attr) => {
     const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
-    return binaryValue.toString('base64')
+    return { InlineBinary: binaryValue.toString('base64') };
 }
 
 const getValueInlineSignedShort = (dataSet, attr) => {
@@ -54,7 +58,12 @@ const getValueInlineFloat = (dataSet, attr) => {
 }
 
 const getValueInlineIntString = (dataSet, attr) => {
-    return getValueInlineString(dataSet,attr).map(val => parseInt(val));
+    return getStrings(dataSet,attr).map(val => parseInt(val));
+}
+
+
+const getValueInlineFloatString = (dataSet, attr) => {
+    return getStrings(dataSet,attr).map(val => parseFloat(val));
 }
 
 const getValueInlineFloatDouble = (dataSet, attr) => {
@@ -84,9 +93,10 @@ const getValueInline = (dataSet, attr, vr) => {
             return getValueInlineString(dataSet, attr)
         case 'AT': 
             return getValueInlineAttributeTag(dataSet, attr)
+        case 'DS':
+            return getValueInlineFloatString(dataSet,attr) 
         case 'CS': 
         case 'DA': 
-        case 'DS': 
         case 'DT': 
             return getValueInlineString(dataSet, attr)
         case 'FL':
