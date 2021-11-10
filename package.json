@@ -1,6 +1,6 @@
 {
   "name": "dicomp10-to-dicomweb",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Library to convert DICOMP10 to DICOMweb format",
   "main": "src/index.js",
   "directories": {
@@ -20,7 +20,7 @@
     "DICOM",
     "DICOMweb"
   ],
-  "author": "Chris Hafey <chafey@gmail.com>",
+  "author": ["Chris Hafey <chafey@gmail.com>","Bill Wallace <bill.wallace@radicalimaging.com>"],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/chafey/dicomp10-to-dicomweb-js/issues"
