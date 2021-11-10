@@ -6,6 +6,9 @@
   "directories": {
     "doc": "docs"
   },
+  "bin": {
+    "mkdicomweb": "bin/mkdicomweb.js"
+  },
   "scripts": {
     "test": "mocha --recursive --trace-warnings --unhandled-rejections=strict"
   },

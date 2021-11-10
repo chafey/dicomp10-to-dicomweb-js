@@ -1,7 +1,11 @@
-const dicomp10todicomweb = require('./index')
+#! /usr/bin/env node
+
+console.log('Hello mkdicomweb');
+
+const dicomp10todicomweb = require('./../src/index')
 const fs = require('fs')
 const path = require('path');
-const { JSONWriter } = require('./index');
+const { JSONWriter } = require('./../src/index');
 
 const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
 

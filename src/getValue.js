@@ -12,7 +12,9 @@ const getValuePatientName = (dataSet, attr) => {
     return getStrings(dataSet,attr).map(item => {Alphabetic: item});
 }
 
+/** Gets either InlineBinary or BulkDataURI, if already defined */
 const getValueInlineBinary = (dataSet, attr) => {
+    if( attr.BulkDataURI ) return { BulkDataURI: attr.BulkDataURI };
     const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
     return { InlineBinary: binaryValue.toString('base64') };
 }
