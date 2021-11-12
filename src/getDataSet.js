@@ -1,9 +1,9 @@
 const getVR = require('./getVR')
 const getValue = require('./getValue')
 
-const attributeToJS = (metadata, tag, dataSet, attr, callback, options) => {
+const attributeToJS = async (metadata, tag, dataSet, attr, callback, options) => {
     const vr = getVR(attr)
-    const value = getValue(dataSet, attr, vr, getDataSet, callback, options)
+    const value = await getValue(dataSet, attr, vr, getDataSet, callback, options)
     const key = tag.substring(1).toUpperCase();
     if (value == undefined || value.length == 0) {
         metadata[key] = {
@@ -22,13 +22,13 @@ const attributeToJS = (metadata, tag, dataSet, attr, callback, options) => {
     }
 }
 
-const getDataSet = (dataSet, callback, options) => {
+const getDataSet = async (dataSet, callback, options) => {
     const metadata = {}
 
     // iterate over dataSet attributes in order
     for (const tag in dataSet.elements) {
         const attr = dataSet.elements[tag]
-        attributeToJS(metadata, tag, dataSet, attr, callback, options)
+        await attributeToJS(metadata, tag, dataSet, attr, callback, options)
     }
     return { metadata }
 }

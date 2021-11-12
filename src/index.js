@@ -58,7 +58,7 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     }
 
     // convert to DICOMweb MetaData and BulkData
-    const result = getDataSet(dataSet, generator, options);
+    const result = await getDataSet(dataSet, generator, options);
     
     await callback.metadata(id, result.metadata)
 

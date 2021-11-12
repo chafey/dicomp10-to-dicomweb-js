@@ -139,10 +139,10 @@ const getValueInline = (dataSet, attr, vr) => {
     }
 }
 
-const getValue = (dataSet, attr, vr, getDataSet, callback, options) => {
+const getValue = async (dataSet, attr, vr, getDataSet, callback, options) => {
     if(attr.tag === 'x7fe00010') {
-        extractImageFrames(dataSet, attr, vr, callback, options)
-        return
+        const BulkDataURI = await extractImageFrames(dataSet, attr, vr, callback, options)
+        return {BulkDataURI};
     }
     if(attr.items) {
         // sequences

@@ -14,7 +14,7 @@ const getFrameSize = (dataSet) => {
     return rows * columns * samplesPerPixel * bitsAllocated / 8
 }
 
-const extractImageFrames = (dataSet, attr, vr, callback, options) => {
+const extractImageFrames = async (dataSet, attr, vr, callback, options) => {
     const numberOfFrames = getNumberOfFrames(dataSet)
     const framesAreFragmented = areFramesAreFragmented(attr, numberOfFrames)
     const uncompressedFrameSize = getFrameSize(dataSet)
@@ -29,7 +29,7 @@ const extractImageFrames = (dataSet, attr, vr, callback, options) => {
             BulkDataURI = callback.imageFrame(imageFrame, {dataSet})
         }
     }
-    attr.BulkDataURI = `instances/UID/frames`
+    return BulkDataURI
 }
 
 module.exports = extractImageFrames
