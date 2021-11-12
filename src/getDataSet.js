@@ -30,10 +30,7 @@ const getDataSet = (dataSet, callback, options) => {
         const attr = dataSet.elements[tag]
         attributeToJS(metadata, tag, dataSet, attr, callback, options)
     }
-
-    return {
-        metadata: metadata
-    }
+    return { metadata }
 }
 
 module.exports = getDataSet

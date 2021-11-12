@@ -12,9 +12,10 @@ const ImageFrameWriter = async (id, index, imageFrame) => {
     const contentType = `Content-Type: ${type.contentType};transfer-syntax=${transferSyntaxUid}\r\n`
     const fileName = path.join(id.imageFrameRootPath, '' + (1+index))
     let writeStream;
+    let rawStream;
     if( type.gzip ) {
         console.log('Writing gzip stream to', fileName, contentType);
-        const rawStream = fs.createWriteStream(fileName+'.gz');
+        rawStream = fs.createWriteStream(fileName+'.gz');
         writeStream = zlib.createGzip();
         writeStream.on('error', err => console.warn('Error:',err));
         writeStream.pipe(rawStream);
@@ -29,7 +30,9 @@ const ImageFrameWriter = async (id, index, imageFrame) => {
     await writeStream.write(imageFrame);
     await writeStream.write('\r\n--BOUNDARY_FIXED_32934857949532587--');
     await writeStream.end();
-    return id.imageFrameRootPath;
+    writeStream.close();
+    if( rawStream ) rawStream.close();
+    return `instances/${id.sopInstanceUid}/frames/${index+1}`;
 };
 
 module.exports = ImageFrameWriter;

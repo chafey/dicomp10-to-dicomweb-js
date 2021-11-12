@@ -7,7 +7,8 @@
     "doc": "docs"
   },
   "bin": {
-    "mkdicomweb": "bin/mkdicomweb.js"
+    "mkdicomweb": "bin/mkdicomweb.js",
+    "mkdicomwebinstances": "bin/mkdicomwebinstances.js"
   },
   "scripts": {
     "test": "mocha --recursive --trace-warnings --unhandled-rejections=strict"

@@ -37,8 +37,34 @@ View [specification](docs/spec.md)
 A visual studio code build task is also included so you can run it from there with "Terminal->Run Build Task" (Shift+Command+B)
 
 ## Running the CLI
+Install the CLI with either npm install -g .  or npm install -g dicomp10-to-dicomweb
 
-See [dicomp10todicomweb example](examples/dicomp10todicomweb/README.md)
+### To create instances
+Run the tool:
+```
+mkdicomwebinstances <directoryOfP10Files>
+```
+
+TODO: There is a -d option to this which writes the instances out in deduplicated (single instance) format 
+instead of as metadata files, and a -g option to write deduplicated group files.  
+This option is the way it would be handled for a lambda function operating on a single file at a time.
+
+### To create a full DICOMweb output structure
+Run the tool:
+```
+mkdicomweb <directoryOfP10Files>
+```
+
+### To run deduplicated and deduplicatedGroup
+TODO: Two more tools are planned, mkdicomwebgroupdeduplicated and mkdicomwebfromdeduplicated,
+to make the grouped deduplicated files, and then to make the full metadata files
+from the deduplicated group files.  These perform directory scans to find updated deduplicated
+files to test against, but enable full update/round trip setup.
+
+### To Create DICOM part 10 from DICOMweb files
+TODO
+
+Run the tool mkdicomwebpart10 on the studyUID, and optionally on the series/instance UID's of interest to generate a local set of part 10 files.
 
 ## TODO (Looking for help here!!)
 
@@ -51,11 +77,7 @@ See [dicomp10todicomweb example](examples/dicomp10todicomweb/README.md)
     * Get PN written properly
     * Get multi-valued values written properly
 * Enhance cli
-    * Add support for directory as input
     * Add support for specifying bulkDataMinSize
-    * Add support for specifying recursive directory search on input
-    * Add support for wrapping bulkdata and image frames with multi-part mime header
-    * Add support for gzip output
     * Add support for writing out DICOM P10 file
 * Enhance library
     * Write out "info" file

@@ -29,9 +29,7 @@ const extractImageFrames = (dataSet, attr, vr, callback, options) => {
             BulkDataURI = callback.imageFrame(imageFrame, {dataSet})
         }
     }
-    attr.BulkDataURI = BulkDataURI;
+    attr.BulkDataURI = `instances/UID/frames`
 }
-
-
 
 module.exports = extractImageFrames
