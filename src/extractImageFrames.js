@@ -23,10 +23,10 @@ const extractImageFrames = async (dataSet, attr, vr, callback, options) => {
     for(let frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
         if(attr.encapsulatedPixelData) {
             const compressedImageFrame = getEncapsulatedImageFrame(dataSet, attr, frameIndex, framesAreFragmented)
-            BulkDataURI = callback.imageFrame(compressedImageFrame, {dataSet})
+            BulkDataURI = await callback.imageFrame(compressedImageFrame, {dataSet})
         } else {
             const imageFrame = getUncompressedImageFrame(dataSet, attr, frameIndex, uncompressedFrameSize)
-            BulkDataURI = callback.imageFrame(imageFrame, {dataSet})
+            BulkDataURI = await callback.imageFrame(imageFrame, {dataSet})
         }
     }
     return BulkDataURI

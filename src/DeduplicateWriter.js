@@ -15,21 +15,17 @@ const writeDeduplicatedFile = async (dir, data) => {
 }
 
 /** Writes out JSON files to the given file name.  Automatically GZips them, and adds the extension */
-const DeduplicateWriter = () => {
-    const returnFunc =
-        async (id, data) => {
-            const {studyInstanceUid, sopInstanceUid} = id;
-            if( this.studyInstanceUid!=studyInstanceUid ) {
-                if( this.studyInstanceUid ) {
-                    await writeDeduplicatedFile(this.deduplicatedPath, this.studyData);
-                }
-                this.studyData = [];
-                this.studyInstanceUid = studyInstanceUid;
-                this.deduplicatedPath = id.deduplicatedPath;
-            }
-            this.studyData.push(data);
-        };
-    return returnFunc.bind({});
-}
+const DeduplicateWriter = async (id, data) => {
+    const { studyInstanceUid, sopInstanceUid } = id;
+    if (this.studyInstanceUid != studyInstanceUid) {
+        if (this.studyInstanceUid) {
+            await writeDeduplicatedFile(this.deduplicatedPath, this.studyData);
+        }
+        this.studyData = [];
+        this.studyInstanceUid = studyInstanceUid;
+        this.deduplicatedPath = id.deduplicatedPath;
+    }
+    this.studyData.push(data);
+};
 
 module.exports = DeduplicateWriter;
