@@ -1,25 +1,11 @@
-const zlib = require('zlib');
-const fs = require('fs');
-const path = require('path');
+const WriteStream = require('./WriteStream')
 
 /** Writes out JSON files to the given file name.  Automatically GZips them, and adds the extension */
 const JSONWriter = async (dir, name, data, options = {gzip:true}) => {
-    if(!fs.existsSync(dir)) {
-        console.log('Trying to create path', dir);
-        fs.mkdirSync(dir, { recursive: true })
-    }
-    const fileName = dir + '/' + name + (options.gzip ? '.gz' : '.json');
-    const rawStream = fs.createWriteStream(fileName)
-    let writeStream;
-    if( options.gzip ) {
-        writeStream = zlib.createGzip();
-        writeStream.on('error', err => console.warn('Error:',err));
-        writeStream.pipe(rawStream);
-    } else {
-        writeStream = rawStream;
-    }
+    const fileName = name + (options.gzip ? '.gz' : '.json');
+    let writeStream = WriteStream(dir,fileName, {mkdir: true, gzip: options.gzip})
     await writeStream.write(JSON.stringify(data, null, 1));
-    writeStream.end();
+    await writeStream.close();
 }
 
 module.exports=JSONWriter

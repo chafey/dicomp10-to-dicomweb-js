@@ -55,7 +55,7 @@ const StreamingFunctions = {
       const chunk = this.findChunk(start + i);
       const chunkI = start + i - chunk.start
       const useLen = Math.min(buflen,chunk.length-chunkI)
-      chunk.copy(ret,i,chunkI,useLen);
+      chunk.copy(ret,i,chunkI,chunkI+useLen);
       i += useLen;
     }
     return ret;

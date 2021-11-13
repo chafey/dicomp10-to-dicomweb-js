@@ -7,7 +7,7 @@ function IdCreator(directoryName) {
         const sopInstanceRootPath = path.join(studyPath, 'series', uids.seriesInstanceUid, 'instances', uids.sopInstanceUid)
         const deduplicatedPath = path.join(studyPath, 'deduplicated');
         fs.mkdirSync(sopInstanceRootPath, { recursive: true })
-        fs.mkdirSync(deduplicatedPath, { recursive: true })
+        fs.mkdirSync(path.join(deduplicatedPath,'instances'), { recursive: true })
         const imageFrameRootPath = path.join(sopInstanceRootPath, 'frames')
         return {
             ...uids,

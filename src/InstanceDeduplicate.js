@@ -12,13 +12,13 @@ const extractors = { patient: TagLists.PatientQuery, study: TagLists.StudyQuery,
 async function deduplicateSingleInstance(id, imageFrame) {
     if (!imageFrame) return;
     const deduplicated = {...imageFrame};
-    const options = { remove: false, hash: true };
+    const options = { remove: true, hash: true };
 
     if( !this.extractors ) this.extractors = extractors;
     for (const key of Object.keys(this.extractors)) {
         const extracted = TagLists.extract(deduplicated, key, this.extractors[key], options);
         const hashKey = extracted[Tags.DeduppedHash].Value[0];
-        this.bulkdata(id, key, extracted);
+        await this.bulkdata(id, key, extracted);
         this.extractData[hashKey] = extracted;
     }
     this.deduplicatedInstances.push(deduplicated);

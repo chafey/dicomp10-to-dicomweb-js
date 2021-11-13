@@ -17,4 +17,10 @@ const JSONReader = async (dir, name, def) => {
     return finalData && JSON.parse(finalData) || def;
 };
 
+/** Calls the JSON reader on the path appropriate for the given hash data */
+JSONReader.readHashData = (studyDir, hashValue, extension='.json.gz') => {
+    const hashPath = path.join(studyDir,'bulkdata',hashValue.substring(0,3),hashValue.substring(3,5));
+    return JSONReader(hashPath,hashValue.substring(5) + extension);
+}
+
 module.exports = JSONReader;

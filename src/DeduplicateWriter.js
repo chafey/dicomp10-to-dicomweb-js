@@ -2,15 +2,12 @@ const zlib = require('zlib');
 const hash = require('object-hash');
 const fs = require('fs')
 const path = require('path');
+const JSONWriter = require('./JSONWriter');
 
 const writeDeduplicatedFile = async (dir, data) => {
     const hashValue = hash(data);
-    const dedupFile = path.join(dir, hashValue + '.json');
-    console.log('DeduplicateWriter with', data.length, 'instances to', dedupFile);
-    const writeStream = fs.createWriteStream(dedupFile)
-    const rawData = JSON.stringify(data);
-    await writeStream.write(rawData);
-    writeStream.close();
+    console.log('Writing deduplicated instance to', dir, hashValue);
+    await JSONWriter(dir,hashValue, data);
     return hashValue;
 }
 
@@ -26,6 +23,12 @@ const DeduplicateWriter = async (id, data) => {
         this.deduplicatedPath = id.deduplicatedPath;
     }
     this.studyData.push(data);
+};
+
+DeduplicateWriter.perInstance = async (id, data) => {
+    const { deduplicatedPath } = id;
+    const instanceDir = path.join(deduplicatedPath,'instances');
+    return writeDeduplicatedFile(instanceDir,data);
 };
 
 module.exports = DeduplicateWriter;

@@ -8,7 +8,9 @@
   },
   "bin": {
     "mkdicomweb": "bin/mkdicomweb.js",
-    "mkdicomwebinstances": "bin/mkdicomwebinstances.js"
+    "mkdicomwebinstances": "bin/mkdicomwebinstances.js",
+    "mkdicomwebstudy": "bin/mkdicomwebsutdy.js",
+    "staticwadojs": "bin/mkdicomweb.js"
   },
   "scripts": {
     "test": "mocha --recursive --trace-warnings --unhandled-rejections=strict"

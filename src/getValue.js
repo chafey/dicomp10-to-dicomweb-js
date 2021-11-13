@@ -146,18 +146,20 @@ const getValue = async (dataSet, attr, vr, getDataSet, callback, options) => {
     }
     if(attr.items) {
         // sequences
-        return attr.items.map((item) => {
-            const result = getDataSet(item.dataSet, callback, options)
-            return result.metadata
-        })
+        const result = [];
+        for(const item of attr.items) {
+            const subResult = await getDataSet(item.dataSet, callback, options)
+            if( subResult.metadata ) result.push(subResult.metadata);
+        }
+        return result
     } else {
         // non sequence item
         if(attr.length <= options.maximumInlineDataLength) {
             return getValueInline(dataSet, attr, vr)
         } else {
             const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
-            callback.bulkdata(binaryValue)
-            // TODO: add bulkdata ref to metadata
+            const BulkDataURI = await callback.bulkdata(binaryValue)
+            return {BulkDataURI};
         }
     }
 }

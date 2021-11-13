@@ -2,32 +2,23 @@ const zlib = require('zlib');
 const hash = require('object-hash');
 const fs = require('fs')
 const path = require('path');
+const Tags = require('./Tags');
+const WriteStream = require('./WriteStream');
 
-const hashWritten = {};
+let hashWritten = {};
 
 /** Writes out JSON files to the given file name.  Automatically GZips them, and adds the extension */
 const HashDataWriter = async (id, key, data) => {
     const isRaw = ArrayBuffer.isView(data);
-    const bulkPath = HashDataWriter.createHashPath(data);
-    const gzip = bulkPath.indexOf('.gz')!=-1;
-    const absolutePath = path.join(id.sopInstanceRootPath, bulkPath);
-    const dirName = path.dirname(absolutePath)
-    if( hashWritten[bulkPath] ) return;
-    hashWritten[bulkPath] = true;
-    console.log('HashDataWriter', key,' to', absolutePath);
-    if(!fs.existsSync(dirName)) {
-        fs.mkdirSync(dirName, { recursive: true })
-    }
-    const rawStream = fs.createWriteStream(absolutePath)
-    let writeStream = rawStream;
-    if( gzip ) {
-        const writeStream = zlib.createGzip();
-        writeStream.pipe(rawStream);
-    }
+    const {dirName, fileName} = HashDataWriter.createHashPath(data);
+    const absolutePath = path.join(id.sopInstanceRootPath, dirName);
+    if (hashWritten[absolutePath]) return;
     const rawData = isRaw ? data : JSON.stringify(data, null, 1);
+    const writeStream = WriteStream(dirName, fileName, {mkdir:true})
     await writeStream.write(rawData);
-    writeStream.end();
-    return bulkPath;
+    await writeStream.close();
+    // console.log('HashDataWriter', key, ' to', absolutePath);
+    return dirName + '/'+fileName;
 }
 
 /**
@@ -37,8 +28,13 @@ HashDataWriter.createHashPath = (data) => {
     const isRaw = ArrayBuffer.isView(data);
     const gzip = !isRaw || data.length > 1024;
     const extension = (isRaw ? '.raw' : '.json') + (gzip && '.gz');
-    const hashValue = hash(data);
-    return path.join('../../../../bulkdata/',hashValue.substring(0,3),hashValue.substring(3,5),hashValue.substring(5) + extension);
+    const existingHash = data[Tags.DeduppedHash];
+    const hashValue = existingHash && existingHash.Value[0] || hash(data);
+    return { 
+        dirName: path.join('../../../../bulkdata/', hashValue.substring(0, 3), hashValue.substring(3, 5)),
+        fileName: hashValue.substring(5) + extension,
+    };
 }
+
 
 module.exports = HashDataWriter;

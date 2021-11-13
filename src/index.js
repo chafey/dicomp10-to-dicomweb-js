@@ -14,9 +14,7 @@ const fs = require('fs')
 const processFiles = async (files,callback, options) => {
     for(let i=0; i<files.length; i++) {
         const file = files[i];
-        console.log('Processing', file);
         if( fs.lstatSync(file).isDirectory() ) {
-          console.log('Path is a directory', file);
           const names = await fs.promises.readdir(file);
           await processFiles(names.map(dirFile => file+'/'+dirFile), callback, options);          
         } else {
@@ -51,10 +49,10 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     let bulkDataIndex = 0
     let imageFrameIndex = 0
     const generator = {
-        bulkdata: (bulkData) =>
-            callback.bulkdata(id, bulkDataIndex++, bulkData),
-        imageFrame: (imageFrame) =>
-            callback.imageFrame(id, imageFrameIndex++, imageFrame)
+        bulkdata: async (bulkData) =>
+            await callback.bulkdata(id, bulkDataIndex++, bulkData),
+        imageFrame: async (imageFrame) =>
+            await callback.imageFrame(id, imageFrameIndex++, imageFrame)
     }
 
     // convert to DICOMweb MetaData and BulkData

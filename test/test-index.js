@@ -1,6 +1,7 @@
 const dicomp10todicomweb = require('../src/index')
 const assert = require('assert')
 const fs = require('fs')
+const asyncIteratorToBuffer = require('../src/asyncIterableToBuffer')
 
 describe('index', async() => {
     let dicomp10stream
@@ -38,5 +39,22 @@ describe('index', async() => {
 
         // Assert
         assert.equal(metadataCalled, true)
+    })
+
+    it('re-assembles buffers correctly', async () => {
+        const buffer = await asyncIteratorToBuffer(dicomp10stream);
+        const len = 181916;
+        const start = 3215+8;
+
+        console.log('Slice buffer test')
+        const subBuffer = buffer.slice(start,start+len);
+        for(let i=0; i<len; i++) {
+            const bufVal = buffer[i+start];
+            const subVal = subBuffer[i];
+            if( bufVal!=subVal ) {
+                console.log(`At position ${i} relative to ${start} buffer is ${bufVal} but subVal is ${subVal}`)
+            }
+            assert.equal(buffer[i+start], subBuffer[i]);
+        }
     })
 })

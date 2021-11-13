@@ -3,6 +3,7 @@ const JSONWriter = require('./JSONWriter');
 const path = require('path');
 const Tags = require('./Tags');
 const { studyInstanceUid } = require('./DeduplicateWriter');
+const JSONReader = require('./JSONReader');
 
 /**
  * CompleteStudyWriter takes the deduplicated data values, all loaded into the study parameter,
@@ -11,12 +12,13 @@ const { studyInstanceUid } = require('./DeduplicateWriter');
 async function CompleteStudyWriter() {
     if( !this.id ) return;
     const {studyPath} = this.id;
-    const anInstance = recombine(this,0);
+    // Can set this to empty to force read
+    const anInstance = await recombine(this,0);
     console.log('Writing complete study data to', studyPath);
     
     const series = {};
     for(let i=0; i<this.deduplicatedInstances.length; i++) {
-        const seriesInstance = recombine(this,i);
+        const seriesInstance = await recombine(this,i);
         const seriesInstanceUid = getSeriesInstanceUid(seriesInstance);
         if( !seriesInstanceUid ) {
             console.log('Cant get seriesUid from',Tags.SeriesInstanceUID, seriesInstance );
@@ -79,9 +81,26 @@ const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInsta
 /** Create a full study instance data from a partial one
  * TODO - implement this fully, for now it is just partial.
  */
-const recombine = (study,index) => {
-    // TODO - generate this from a combination of extracted data later
-    return study.deduplicatedInstances[index];
+const recombine = async (study,index) => {
+    const deduplicated = study.deduplicatedInstances[index];
+    const refs = deduplicated[Tags.DeduppedRef];
+    if( !refs ) {
+        console.log('No refs for', deduplicated);
+        return deduplicated;
+    }
+    const ret = Object.assign({}, deduplicated);
+    for(const hashKey of refs.Value) {
+        let item = study.extractData[hashKey];
+        if( !item ) {
+            item = await JSONReader.readHashData(study.id.studyPath,hashKey);
+            if( !item ) {
+                continue;
+            }
+            study.extractData[hashKey] = item;
+        }
+        Object.assign(ret,item);
+    }
+    return ret;
 }
 
 module.exports = CompleteStudyWriter;

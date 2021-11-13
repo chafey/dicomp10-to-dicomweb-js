@@ -1,10 +1,10 @@
 #! /usr/bin/env node
 
-const dicomp10todicomweb = require('./../src/index')
-const {getArg,hasArg, getRemainingArgs, showHelp} = require('./../src/args');
+const dicomp10todicomweb = require('../src/index')
+const {getArg,hasArg, getRemainingArgs, showHelp} = require('../src/args');
 const fs = require('fs')
 const path = require('path');
-const { JSONWriter } = require('./../src/index');
+const { JSONWriter } = require('../src/index');
 const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
 
 const {JSONReader, IdCreator, HashDataWriter, CompleteStudyWriter, DeduplicateWriter, InstanceDeduplicate, ImageFrameWriter, processFiles } = dicomp10todicomweb;
@@ -12,14 +12,15 @@ const {JSONReader, IdCreator, HashDataWriter, CompleteStudyWriter, DeduplicateWr
 
 const main = async () => {
     const directoryName = getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)')
-    const instanceData = hasArg('-i', '--instances', 'Write instance metadata as well as dedulicate data')
-    const deduplicate = hasArg('-e', '--deduplicate', 'Deduplicate data instead of writing instance data') || instanceData
+    const groupOnly = hasArg('-g', '--groupOnly', 'Only write group deduplicated files')
+    const noGroup = hasArg('-n', '--noGroup', 'Do not write group files') || instanceData
     const isHelp = hasArg('-h', '--help', 'Print help');
     const files = getRemainingArgs();
     if(!files.length || isHelp) {
         showHelp( 
-            'mkdicomwebinstances (options) <inputfiles>',
-            'Make DICOMweb instances from binary Part 10 DICOM files.');
+            'mkdicomwebstudy (options)',
+            'Make DICOMweb study information from deduplicated files.\n'+
+            'Deduplicated files can be written by mkdicomwebinstances');
         return
     }
     
