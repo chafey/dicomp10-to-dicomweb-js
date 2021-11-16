@@ -5,3 +5,4 @@ Example of running
 
 
 
+See [Archive Format](docs/archive-format.md) for details on the archive format.

@@ -11,9 +11,17 @@ const {JSONReader, IdCreator, HashDataWriter, CompleteStudyWriter, DeduplicateWr
 
 const main = async () => {
     const directoryName = getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)')
-    const instanceData = hasArg('-i', '--instances', 'Write instance metadata as well as dedulicate data')
-    const deduplicate = hasArg('-e', '--deduplicate', 'Deduplicate data instead of writing instance data') || instanceData
+    const isInstanceMetadata = hasArg('-i', '--instances', true, 'Write instance metadata')
+    const isDeduplicate = hasArg('-e', '--deduplicate', false, 'Write deduplicate instance level data')
+    const isGroup = hasArg('-g', '--group', false, 'Deduplicate data to group files instead of writing instance data') || instanceData
+    const maximumInlinePublicLength = getArg('-m', '--maximumInlinePublicLength', 128*1024+2, 'Maximum length of public binary data')
+    const maximumInlinePrivateLength = getArg(null, '--maximumInlinePrivateLength', 64, 'Maximum length of private binary data')
+    const colourContentType = getArg(null, '--colourContentType', null, 'Colour content type')
+    const contentType = getArg('-c', '--contentType', null, 'Content type')
+    const recompressType = getArg(null, '--recompress', 'uncompressed,j2k,j2p', 'List of types to recompress')
+
     const isHelp = hasArg('-h', '--help', 'Print help');
+
     const files = getRemainingArgs();
     if(!files.length || isHelp) {
         showHelp( 
@@ -22,15 +30,19 @@ const main = async () => {
         return
     }
     
-    
     const options = {
-        maximumInlineDataLength: 128
+        maximumInlinePublicLength, maximumInlinePrivateLength,
+        isGroup, isInstanceMetadata, isDeduplicate,
+        isSeriesMetadata: false,
+        isQuery: false,
+        recompressType, contentType, colourContentType,
+        directoryName,
     }
 
     const callback = {
-        uids: IdCreator(directoryName),
-        bulkdata: async (id, index, bulkData) => await HashDataWriter(id,index,bulkData),
-        imageFrame: ImageFrameWriter,
+        uids: IdCreator(options),
+        bulkdata: HashDataWriter,
+        imageFrame: ImageFrameWriter(options),
         completeStudy: () => null,
         metadata: async (id, metadata) => await JSONWriter(id.sopInstanceRootPath,'metadata',metadata),
         deduplicated: DeduplicateWriter.perInstance,
@@ -43,8 +55,10 @@ const main = async () => {
         callback.metadata = InstanceDeduplicate;
     }
     await processFiles(files, callback,options);
+
+    await completeStudy();
 }
 
 main().then(()=> {
-        console.log('done2')
+        console.log('done')
     });

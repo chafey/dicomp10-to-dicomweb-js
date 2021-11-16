@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path');
 
-function IdCreator(directoryName) {
+function IdCreator({directoryName}) {
     return (uids) => {
         const studyPath = path.join(directoryName, 'studies', uids.studyInstanceUid)
         const sopInstanceRootPath = path.join(studyPath, 'series', uids.seriesInstanceUid, 'instances', uids.sopInstanceUid)
