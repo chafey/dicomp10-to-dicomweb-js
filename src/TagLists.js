@@ -17,8 +17,10 @@ const SeriesExtract = [SeriesDescription, SeriesNumber, SeriesInstanceUID,
   ];
 const SeriesQuery = [StudyInstanceUID,...SeriesExtract];
 
+const InstanceQuery = [Tags.SOPInstanceUID, Tags.InstanceNumber, Tags.SeriesInstanceUID, Tags.StudyInstanceUID];
+
 const TagSets = {
-    PatientQuery, StudyQuery, PatientStudyQuery, SeriesQuery, SeriesExtract,
+    PatientQuery, StudyQuery, PatientStudyQuery, SeriesQuery, SeriesExtract, InstanceQuery,
 
     extract: (data, type, tagSet, options) => {
         const ret = {};

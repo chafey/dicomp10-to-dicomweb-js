@@ -2,7 +2,6 @@
 
 const dicomp10todicomweb = require('./../src/index')
 const {getArg,hasArg, getRemainingArgs, showHelp} = require('./../src/args');
-const fs = require('fs')
 const path = require('path');
 const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
 

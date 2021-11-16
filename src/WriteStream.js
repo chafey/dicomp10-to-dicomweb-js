@@ -24,6 +24,10 @@ const WriteStream = (dir,name,options={}) => {
     if (isGzip) {
         writeStream = zlib.createGzip();
         writeStream.pipe(rawStream);
+        writeStream.on('close', () => {
+            console.log('close gzip, closing raw');
+            rawStream.close();
+        });
     }
 
     const close = async function() {

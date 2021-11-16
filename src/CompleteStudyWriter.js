@@ -2,7 +2,6 @@ const TagLists = require('./TagLists');
 const JSONWriter = require('./JSONWriter');
 const path = require('path');
 const Tags = require('./Tags');
-const { studyInstanceUid } = require('./DeduplicateWriter');
 const JSONReader = require('./JSONReader');
 
 /**
@@ -31,9 +30,12 @@ async function CompleteStudyWriter() {
                 seriesPath,
                 seriesQuery,
                 instances: [],
+                instancesQuery: [],
             };
         }
         series[seriesInstanceUid].instances.push(seriesInstance);
+        series[seriesInstanceUid].instancesQuery.push(TagLists.extract(seriesInstance, 
+            'instance', TagLists.InstanceQuery));
         // TODO - add instanceQuery path too
     }
 
@@ -43,7 +45,7 @@ async function CompleteStudyWriter() {
     let numberOfSeries = 0;
     for(const seriesUid of Object.keys(series) ) {
         const singleSeries = series[seriesUid];
-        const {seriesQuery,seriesPath, instances} = singleSeries;
+        const {seriesQuery,seriesPath, instances, instancesQuery} = singleSeries;
         seriesQuery[Tags.NumberOfSeriesRelatedInstances] = {vr:'IS', Value: [instances.length]};
         numberOfInstances += instances.length;
         numberOfSeries++;
@@ -52,6 +54,7 @@ async function CompleteStudyWriter() {
         if( modalitiesInStudy.indexOf(modality)==-1 ) modalitiesInStudy.push(modality);
         await JSONWriter(seriesPath, 'metadata',instances);
         await JSONWriter(seriesPath, 'series', [seriesQuery]);
+        await JSONWriter(seriesPath, 'instances', instancesQuery)
     }
 
     await JSONWriter(studyPath,'series',seriesList);

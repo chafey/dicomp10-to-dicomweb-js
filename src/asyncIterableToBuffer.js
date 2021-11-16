@@ -12,7 +12,6 @@ const handler = {
   },
 
   length: obj => obj.combinedLength,
-
 };
 
 const StreamingFunctions = {
@@ -59,6 +58,10 @@ const StreamingFunctions = {
       i += useLen;
     }
     return ret;
+  },
+
+  hexSlice: function(start,end) {
+    return this.slice(start,end).hexSlice();
   },
 
   _keys: { then: true, lastChunk: true, slice: true, findChunk: true, chunks: true, index_get: true },

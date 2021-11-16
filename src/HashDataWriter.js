@@ -1,6 +1,5 @@
 const zlib = require('zlib');
 const hash = require('object-hash');
-const fs = require('fs')
 const path = require('path');
 const Tags = require('./Tags');
 const WriteStream = require('./WriteStream');
@@ -10,11 +9,12 @@ let hashWritten = {};
 /** Writes out JSON files to the given file name.  Automatically GZips them, and adds the extension */
 const HashDataWriter = async (id, key, data) => {
     const isRaw = ArrayBuffer.isView(data);
+    const gzip = !isRaw || data.length > 1024;
     const {dirName, fileName} = HashDataWriter.createHashPath(data);
-    const absolutePath = path.join(id.sopInstanceRootPath, dirName);
+    const absolutePath = path.join(id.studyPath, dirName);
     if (hashWritten[absolutePath]) return;
     const rawData = isRaw ? data : JSON.stringify(data, null, 1);
-    const writeStream = WriteStream(dirName, fileName, {mkdir:true})
+    const writeStream = WriteStream(dirName, fileName, {mkdir:true, gzip})
     await writeStream.write(rawData);
     await writeStream.close();
     // console.log('HashDataWriter', key, ' to', absolutePath);
@@ -26,12 +26,12 @@ const HashDataWriter = async (id, key, data) => {
  */
 HashDataWriter.createHashPath = (data) => {
     const isRaw = ArrayBuffer.isView(data);
-    const gzip = !isRaw || data.length > 1024;
-    const extension = (isRaw ? '.raw' : '.json') + (gzip && '.gz');
+    const extension = (isRaw ? '.raw' : '.json');
     const existingHash = data[Tags.DeduppedHash];
     const hashValue = existingHash && existingHash.Value[0] || hash(data);
     return { 
-        dirName: path.join('../../../../bulkdata/', hashValue.substring(0, 3), hashValue.substring(3, 5)),
+        // Use string concat as this value is used for the BulkDataURI which needs forward slashes
+        dirName: 'bulkdata/'+ hashValue.substring(0, 3) + '/' + hashValue.substring(3, 5),
         fileName: hashValue.substring(5) + extension,
     };
 }

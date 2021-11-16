@@ -5,11 +5,13 @@ const getValueInlineString = (dataSet, attr) => {
 }
 
 const getStrings = (dataSet, attr) => {
-    return dataSet.string(attr.tag).split('\\');
+    const ret = dataSet.string(attr.tag);
+    return ret && ret.split(/\\/) || undefined;
 }
 
 const getValuePatientName = (dataSet, attr) => {
-    return getStrings(dataSet,attr).map(item => {Alphabetic: item});
+    const strings = getStrings(dataSet,attr);
+    return strings && strings.map(item => ({Alphabetic: item})) || undefined;
 }
 
 /** Gets either InlineBinary or BulkDataURI, if already defined */
