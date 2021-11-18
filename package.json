@@ -9,7 +9,7 @@
   "bin": {
     "mkdicomweb": "bin/mkdicomweb.js",
     "mkdicomwebinstances": "bin/mkdicomwebinstances.js",
-    "mkdicomwebstudy": "bin/mkdicomwebsutdy.js",
+    "mkdicomwebstudy": "bin/mkdicomwebstudy.js",
     "staticwadojs": "bin/mkdicomweb.js"
   },
   "scripts": {
