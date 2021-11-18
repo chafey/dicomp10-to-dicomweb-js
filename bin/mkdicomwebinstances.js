@@ -11,16 +11,18 @@ const {JSONReader, IdCreator, HashDataWriter, CompleteStudyWriter, DeduplicateWr
 
 const main = async () => {
     const directoryName = getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)')
-    const isInstanceMetadata = hasArg('-i', '--instances', true, 'Write instance metadata')
     const isDeduplicate = hasArg('-e', '--deduplicate', false, 'Write deduplicate instance level data')
-    const isGroup = hasArg('-g', '--group', false, 'Deduplicate data to group files instead of writing instance data') || instanceData
+    const isStudyData = hasArg('-s', '--study', false, 'Write study metadata - on provided instances only')
+    const isGroup = isStudyData || hasArg('-g', '--group', false, 'Write combined deduplicate data')
+    const isInstanceMetadata = hasArg('-i', '--instances', !(isGroup || isDeduplicate), 'Write instance metadata')
+    const isClean = hasArg(null,'--clean',true,'Clean the study output directory for these instances')
     const maximumInlinePublicLength = getArg('-m', '--maximumInlinePublicLength', 128*1024+2, 'Maximum length of public binary data')
     const maximumInlinePrivateLength = getArg(null, '--maximumInlinePrivateLength', 64, 'Maximum length of private binary data')
     const colourContentType = getArg(null, '--colourContentType', null, 'Colour content type')
     const contentType = getArg('-c', '--contentType', null, 'Content type')
     const recompressType = getArg(null, '--recompress', 'uncompressed,j2k,j2p', 'List of types to recompress')
 
-    const isHelp = hasArg('-h', '--help', 'Print help');
+    const isHelp = hasArg('-h', '--help',false, 'Print help');
 
     const files = getRemainingArgs();
     if(!files.length || isHelp) {
@@ -32,31 +34,23 @@ const main = async () => {
     
     const options = {
         maximumInlinePublicLength, maximumInlinePrivateLength,
-        isGroup, isInstanceMetadata, isDeduplicate,
-        isSeriesMetadata: false,
-        isQuery: false,
+        isGroup, isInstanceMetadata, isDeduplicate, isClean,
+        isStudyData,
         recompressType, contentType, colourContentType,
         directoryName,
     }
 
     const callback = {
         uids: IdCreator(options),
-        bulkdata: HashDataWriter,
+        bulkdata: HashDataWriter(options),
         imageFrame: ImageFrameWriter(options),
-        completeStudy: () => null,
-        metadata: async (id, metadata) => await JSONWriter(id.sopInstanceRootPath,'metadata',metadata),
-        deduplicated: DeduplicateWriter.perInstance,
+        completeStudy: CompleteStudyWriter(options),
+        metadata: InstanceDeduplicate(options),
+        deduplicated: DeduplicateWriter(options),
     }
-    if( deduplicate ) {
-        if( instanceData ) {
-            // Write the instance metadata too
-            callback.instanceMetadata = callback.metadata;
-        }
-        callback.metadata = InstanceDeduplicate;
-    }
-    await processFiles(files, callback,options);
 
-    await completeStudy();
+    await processFiles(files, callback, options);
+    await callback.completeStudy();
 }
 
 main().then(()=> {

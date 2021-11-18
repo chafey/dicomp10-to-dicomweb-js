@@ -5,51 +5,53 @@ const {getArg,hasArg, getRemainingArgs, showHelp} = require('./../src/args');
 const path = require('path');
 const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
 
-const { JSONWriter } = require('./../src/index');
+const {IdCreator, HashDataWriter, CompleteStudyWriter, DeduplicateWriter, InstanceDeduplicate, ImageFrameWriter, processFiles } = dicomp10todicomweb;
 
-const {processFiles, JSONReader, IdCreator, HashDataWriter, CompleteStudyWriter, DeduplicateWriter, InstanceDeduplicate, ImageFrameWriter } = dicomp10todicomweb;
 
 const main = async () => {
-    const directoryName = getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)');
-    hasArg('-e', '--deduplicate', 'Legacy argument, not required');
-    const isHelp = hasArg('-h', '--help', 'Print help');
+    const directoryName = getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)')
+    const isDeduplicate = hasArg('-e', '--deduplicate', false, 'Write deduplicate instance level data')
+    const isStudyData = hasArg('-s', '--study', true, 'Write study metadata - on provided instances only (TO FIX)')
+    const isGroup = isStudyData || hasArg('-g', '--group', false, 'Write combined deduplicate data')
+    const isInstanceMetadata = hasArg('-i', '--instances', !(isGroup || isDeduplicate), 'Write instance metadata')
+    const maximumInlinePublicLength = getArg('-m', '--maximumInlinePublicLength', 128*1024+2, 'Maximum length of public binary data')
+    const maximumInlinePrivateLength = getArg(null, '--maximumInlinePrivateLength', 64, 'Maximum length of private binary data')
+    const colourContentType = getArg(null, '--colourContentType', null, 'Colour content type')
+    const contentType = getArg('-c', '--contentType', null, 'Content type')
+    const isClean = hasArg(null,'--clean',true,'Clean the study output directory for these instances')
+    const recompressType = getArg(null, '--recompress', 'uncompressed,j2k,j2p', 'List of types to recompress')
+
+    const isHelp = hasArg('-h', '--help',false, 'Print help');
+
     const files = getRemainingArgs();
-    const isInstances = hasArg('-i', '--instances', 'Write instance level metadata');
     if(!files.length || isHelp) {
         showHelp( 
             'mkdicomweb (options) <inputfiles>',
-            'Make DICOMweb study/series query and series metadata from binary Part 10 DICOM files.');
+            'Make DICOMweb instances from binary Part 10 DICOM files.');
         return
     }
     
     const options = {
-        maximumInlineDataLength: 128
+        maximumInlinePublicLength, maximumInlinePrivateLength,
+        isGroup, isInstanceMetadata, isDeduplicate,
+        isStudyData, isClean,
+        recompressType, contentType, colourContentType,
+        directoryName,
     }
 
     const callback = {
-        uids: IdCreator(directoryName),
-        bulkdata: async (id, index, bulkData) => await HashDataWriter(id,index,bulkData),
-        imageFrame: ImageFrameWriter,
-        completeStudy: CompleteStudyWriter,
-        hashdata: HashDataWriter,
-        deduplicated: DeduplicateWriter,
-        metadata: InstanceDeduplicate,
+        uids: IdCreator(options),
+        bulkdata: HashDataWriter(options),
+        imageFrame: ImageFrameWriter(options),
+        completeStudy: CompleteStudyWriter(options),
+        metadata: InstanceDeduplicate(options),
+        deduplicated: DeduplicateWriter(options),
     }
 
-    if( isInstances ) {
-        callback.instanceMetadata = async (id, metadata) => await JSONWriter(id.sopInstanceRootPath,'metadata',metadata);
-    }
-    
-    callback.allStudies = await JSONReader(directoryName, "studies.gz", []);
-
-    await processFiles(files, callback,options);
-
-    // Finalize things if needed
+    await processFiles(files, callback, options);
     await callback.completeStudy();
-    console.log(`There are ${callback.allStudies.length} studies`);
-    await JSONWriter(directoryName,"studies", callback.allStudies);
 }
 
 main().then(()=> {
-        console.log('done2')
+        console.log('done')
     });

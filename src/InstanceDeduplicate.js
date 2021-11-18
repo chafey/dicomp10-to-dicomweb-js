@@ -1,6 +1,6 @@
+const JSONWriter = require('./JSONWriter');
 const TagLists = require('./TagLists');
 const Tags = require('./Tags');
-
 const extractors = { patient: TagLists.PatientQuery, study: TagLists.StudyQuery, series: TagLists.SeriesExtract };
 
 /**
@@ -11,36 +11,32 @@ const extractors = { patient: TagLists.PatientQuery, study: TagLists.StudyQuery,
  */
 async function deduplicateSingleInstance(id, imageFrame) {
     if (!imageFrame) return;
-    const deduplicated = {...imageFrame};
+    const studyData = await this.completeStudy.getCurrentStudyData(this, id);
+    const deduplicated = { ...imageFrame };
     const options = { remove: true, hash: true };
 
-    if( !this.extractors ) this.extractors = extractors;
+    if (!this.extractors) this.extractors = extractors;
     for (const key of Object.keys(this.extractors)) {
         const extracted = TagLists.extract(deduplicated, key, this.extractors[key], options);
         const hashKey = extracted[Tags.DeduppedHash].Value[0];
-        await this.bulkdata(id, key, extracted);
-        this.extractData[hashKey] = extracted;
+        await studyData.addExtracted(this, hashKey, extracted)
     }
-    this.deduplicatedInstances.push(deduplicated);
     return deduplicated;
 }
 
-async function InstanceDeduplicate(id, imageFrame) {
-    // Notify the existing listeners, if any
-    const { studyInstanceUid } = id;
-    if (this.instanceMetadata) await this.instanceMetadata(id, index, imageFrame);
-    if (this.studyInstanceUid && studyInstanceUid !== this.studyInstanceUid) {
-        await this.completeStudy();
+const InstanceDeduplicate = options =>
+    async function InstanceDeduplicate(id, imageFrame) {
+        // Notify the existing listeners, if any
+        if (options.isInstanceMetadata) {
+            await JSONWriter(id.sopInstanceRootPath, 'metadata', imageFrame);
+        }
+        if( !options.isDeduplicate && !options.isGroup ) {
+            console.log('No deduplicate being generated', options);
+            return;
+        }
+        if (!this.deduplicateSingleInstance) this.deduplicateSingleInstance = deduplicateSingleInstance;
+        const deduppedInstance = await this.deduplicateSingleInstance(id, imageFrame);
+        await this.deduplicated(id, deduppedInstance);
     }
-    if (!this.studyInstanceUid) {
-        this.deduplicatedInstances = [];
-        this.extractData = {};
-        this.id = id;
-        this.studyInstanceUid = studyInstanceUid;
-    }
-    if (!this.deduplicateSingleInstance) this.deduplicateSingleInstance = deduplicateSingleInstance;
-    const deduppedInstance = await this.deduplicateSingleInstance(id, imageFrame);
-    await this.deduplicated(id, deduppedInstance);
-}
 
 module.exports = InstanceDeduplicate;

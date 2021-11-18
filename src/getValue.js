@@ -148,7 +148,7 @@ const isPrivate = attr => {
     return chHex % 2 == 1; 
 }
 
-const isValueInline = (attr, options) {
+const isValueInline = (attr, options) => {
     if( isPrivate(attr) ) {
         return attr.length <= options.maximumInlinePrivateLength
     }

@@ -1,24 +1,51 @@
 const TagLists = require('./TagLists');
 const JSONWriter = require('./JSONWriter');
+const JSONReader = require('./JSONReader');
 const path = require('path');
 const Tags = require('./Tags');
-const JSONReader = require('./JSONReader');
+const StudyData = require('./StudyData')
+
+
+const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInstanceUID] && seriesInstance[Tags.SeriesInstanceUID].Value[0];
 
 /**
  * CompleteStudyWriter takes the deduplicated data values, all loaded into the study parameter,
- * and writes it out as study, series and instance queries, as well as series level metadata.
+ * and writes it out as various dataset types.  The options parameters define what types it gets
+ * written out as.
+ * The studyData object is then removed, so that a new one can be created if required.
  */
 const CompleteStudyWriter = options => {
-    return async function () {
-        if (!this.id) return;
-        const { studyPath } = this.id;
-        // Can set this to empty to force read
-        const anInstance = await recombine(this, 0);
-        console.log('Writing complete study data to', studyPath);
+    const ret = async function () {
+        const {studyData} = this;
+        if (!studyData) return;
+        const { studyPath } = studyData;
+        
+        if( !studyData.numberOfInstances ) {
+            console.log('studyData.deduplicated is empty');
+            delete this.studyData;
+            return;
+        }
 
+        // TODO - also check if anything was updated here, but that is presumed positive for now
+        if(options.isGroup ) {
+            await JSONWriter(path.join(studyPath,'deduplicated'),'deduplicated',studyData.deduplicated);
+        }
+
+        if( !options.isStudyData ) {
+            delete this.studyData;
+            return;
+        }
+
+        // TODO - move this whole chunk into StudyData, let it decide what is required to write
+        // Start by writing an updated deduplicated file
+        console.log('Writing complete study data to', studyPath);
+        await JSONWriter(studyPath,'deduplicated',studyData.deduplicated);
+        
+        const anInstance = await studyData.recombine(0);
         const series = {};
-        for (let i = 0; i < this.deduplicatedInstances.length; i++) {
-            const seriesInstance = await recombine(this, i);
+
+        for (let i = 0; i < studyData.numberOfInstances; i++) {
+            const seriesInstance = await studyData.recombine(i);
             const seriesInstanceUid = getSeriesInstanceUid(seriesInstance);
             if (!seriesInstanceUid) {
                 console.log('Cant get seriesUid from', Tags.SeriesInstanceUID, seriesInstance);
@@ -66,45 +93,39 @@ const CompleteStudyWriter = options => {
         studyQuery[Tags.NumberOfStudyRelatedSeries] = { Value: [numberOfSeries], vr: 'IS' };
         await JSONWriter(studyPath, 'studies', [studyQuery]);
 
-        if (!this.allStudies) this.allStudies = [];
+        const allStudies = await JSONReader(options.directoryName, "studies.gz", []);
         const studyUID = studyQuery[Tags.StudyInstanceUID].Value[0];
-        const studyIndex = this.allStudies.findIndex(item => item[Tags.StudyInstanceUID].Value[0] == studyUID);
+        const studyIndex = allStudies.findIndex(item => item[Tags.StudyInstanceUID].Value[0] == studyUID);
         if (studyIndex == -1) {
-            this.allStudies.push(studyQuery);
+            allStudies.push(studyQuery);
         } else {
-            this.allStudies[studyIndex] = studyQuery;
+            allStudies[studyIndex] = studyQuery;
         }
-        this.allStudies[studyIndex] = studyQuery;
-        delete this.deduplicatedInstances;
-        delete this.extractData;
-        delete this.id;
+        JSONWriter(options.directoryName,"studies", allStudies);
+        delete this.studyData;
     };
-}
 
-const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInstanceUID] && seriesInstance[Tags.SeriesInstanceUID].Value[0];
-
-/** Create a full study instance data from a partial one
- * TODO - implement this fully, for now it is just partial.
- */
-const recombine = async (study, index) => {
-    const deduplicated = study.deduplicatedInstances[index];
-    const refs = deduplicated[Tags.DeduppedRef];
-    if (!refs) {
-        console.log('No refs for', deduplicated);
-        return deduplicated;
-    }
-    const ret = Object.assign({}, deduplicated);
-    for (const hashKey of refs.Value) {
-        let item = study.extractData[hashKey];
-        if (!item) {
-            item = await JSONReader.readHashData(study.id.studyPath, hashKey);
-            if (!item) {
-                continue;
+    /** 
+     * Gets a current study data object, or completes the old one and generates a new one.
+     * async call as it may need to store the current study data value.
+     */
+    ret.getCurrentStudyData = async (callback,id) => {
+        let { studyData } = callback;
+        const { studyInstanceUid } = id;
+        
+        if( studyData ) {
+            if( studyData.studyInstanceUid==studyInstanceUid ) {
+                return studyData;
+            } else {
+                await callback.completeStudy(studyData);
             }
-            study.extractData[hashKey] = item;
         }
-        Object.assign(ret, item);
+        console.log('StudyData=', StudyData);
+        callback.studyData = new StudyData(id, options);
+        await callback.studyData.init();
+        return callback.studyData;
     }
+
     return ret;
 }
 
