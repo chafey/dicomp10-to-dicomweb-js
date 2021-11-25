@@ -120,9 +120,8 @@ const CompleteStudyWriter = options => {
                 await callback.completeStudy(studyData);
             }
         }
-        console.log('StudyData=', StudyData);
         callback.studyData = new StudyData(id, options);
-        await callback.studyData.init();
+        await callback.studyData.init(); 
         return callback.studyData;
     }
 

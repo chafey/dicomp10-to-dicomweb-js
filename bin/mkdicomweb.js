@@ -7,6 +7,12 @@ const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
 
 const {IdCreator, HashDataWriter, CompleteStudyWriter, DeduplicateWriter, InstanceDeduplicate, ImageFrameWriter, processFiles } = dicomp10todicomweb;
 
+/**
+ * The mkdicomweb command first runs mkdicomwebinstances, writing out the deduplicated data, and then runs the
+ * mkdicomwebstudy command, creating the deduplicated data set.
+ * 
+ * TODO - this isn't how it works yet.
+ */
 
 const main = async () => {
     const directoryName = getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)')
@@ -27,7 +33,9 @@ const main = async () => {
     if(!files.length || isHelp) {
         showHelp( 
             'mkdicomweb (options) <inputfiles>',
-            'Make DICOMweb instances from binary Part 10 DICOM files.');
+            'Make DICOMweb query and metadata from binary Part 10 DICOM files.  Does a full read of\n'+
+            'deduplicated files each time a study instance UID is found, and only updates those studies\n'+
+            'having at least one ');
         return
     }
     

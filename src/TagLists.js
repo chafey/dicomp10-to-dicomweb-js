@@ -2,18 +2,19 @@ const objectHash = require('object-hash');
 const Tags = require('./Tags');
 
 const {PatientID, PatientName, IssuerOfPatientID} = Tags;
-const {StudyDescription, AccessionNumber, StudyInstanceUID} = Tags;
-const {SeriesDescription, SeriesNumber, SeriesInstanceUID} = Tags;
+const {StudyDescription, AccessionNumber, StudyInstanceUID, StudyDate, StudyTime} = Tags;
+const {SeriesDescription, SeriesNumber, SeriesInstanceUID, SeriesDate, SeriesTime} = Tags;
 
 const {DeduppedCreator, DeduppedTag, DeduppedHash, DeduppedRef, DeduppedType } = Tags;
 
 const PatientQuery = [PatientID, PatientName, IssuerOfPatientID];
-const StudyQuery = [StudyDescription, AccessionNumber, StudyInstanceUID];
-const PatientStudyQuery = [...PatientID, ...StudyQuery];
+const StudyQuery = [StudyDescription, AccessionNumber, StudyInstanceUID, StudyDate, StudyTime];
+const PatientStudyQuery = [...PatientQuery, ...StudyQuery];
 // The difference between the extracts and the query is that the query contains the parent query values
 // TODO - make it into a self-cpontained object that can generate either
-const SeriesExtract = [SeriesDescription, SeriesNumber, SeriesInstanceUID,
-    Tags.Modality, 
+const SeriesExtract = [
+    SeriesDescription, SeriesNumber, SeriesInstanceUID,
+    Tags.Modality, SeriesDate, SeriesTime,
   ];
 const SeriesQuery = [StudyInstanceUID,...SeriesExtract];
 

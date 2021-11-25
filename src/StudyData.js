@@ -13,6 +13,11 @@ const Tags = require('./Tags');
 class StudyData {
     deduplicated = [];
     extractData = {};
+    // The list of already existing files read in to create this object
+    existingFiles = [];
+
+    // Used to track if new instances have been added.
+    newInstancesAdded = 0;
 
     constructor({ studyInstanceUid, studyPath }, {isGroup, isClean}) {
         this.studyInstanceUid = studyInstanceUid;
@@ -24,12 +29,29 @@ class StudyData {
      * Clean the directory, and/or read existing data in the isInstances or isGroup files.
      * TODO - implement this.
      */
-    async init() {
-
+    async init({instancesRoot, deduplicatedRoot, clean}) {
+        if( clean ) {
+            // Wipe out the study directory entirely, as well as the deduplicatedRoot and instancesRoot
+        }
+        if( deduplicatedRoot ) {
+            await this.readDeduplicated(path.join(deduplicatedRoot,this.studyInstanceUid, 'deduplicated'));
+        }
+        if( instancesRoot ) {
+            await this.readDeduplicated(path.join(instancesRoot,this.studyInstanceUid, 'deduplicated', 'instances'));
+        }
     }
 
     get numberOfInstances() {
         return this.deduplicated.length;
+    }
+
+    /**
+     * Indicate if this study is 'dirty', that is, has been updated.
+     * That is NOT to say that the metadata files generated from this study data are up to date, that is
+     * a separate type of check.
+     */
+    get dirty() {
+        return this.newInstancesAdded>0 || this.existingFiles.length>1;
     }
 
     async getOrLoadExtract(hashKey) {
@@ -73,7 +95,37 @@ class StudyData {
 
     addDeduplicated(data) {
         if( !this.isGroup ) return;
+        // TODO - check the hash code on the added data, if it has already been seen then ignore this item.
+        this.newInstancesAdded++;
         this.deduplicated.push(data);
+    }
+
+    /**
+     * Reads the deduplicated instance directory, for all instances not already referenced.
+     * Only reads .json files.
+     * Records the files read in referencedFiles list.
+     * Sets the dirty deduplicated flag if any instance was read.
+     * 
+     * @param {*} deduplicatedInstanceDirectory 
+     */
+    async readInstances(deduplicatedInstanceDirectory) {
+
+    }
+
+    /**
+     * Reads the deduplicated directory, finding the newest file in the directory of type JSON, 
+     * and then reads it in.  It then reads in all un-referenced files, and adds references to those to the
+     * current path, NOT changing the hash value of the top level element.
+     * 
+     * Records the files read in referencedFiles list.
+     * Sets the dirty deduplicated flag if at least two instances were read.
+     * 
+     * Does NOT call the readInstances, which is a separate step which can be executed after this one.
+     * 
+     * @param {*} deduplicatedDirectory 
+     */
+    async readDeduplicated(deduplicatedDirectory) {
+
     }
 }
 

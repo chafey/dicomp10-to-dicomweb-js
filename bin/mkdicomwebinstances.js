@@ -6,8 +6,7 @@ const path = require('path');
 const { JSONWriter } = require('./../src/index');
 const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
 
-const {JSONReader, IdCreator, HashDataWriter, CompleteStudyWriter, DeduplicateWriter, InstanceDeduplicate, ImageFrameWriter, processFiles } = dicomp10todicomweb;
-
+const {IdCreator, HashDataWriter, CompleteStudyWriter, DeduplicateWriter, InstanceDeduplicate, ImageFrameWriter, processFiles } = dicomp10todicomweb;
 
 const main = async () => {
     const directoryName = getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)')
@@ -18,9 +17,9 @@ const main = async () => {
     const isClean = hasArg(null,'--clean',true,'Clean the study output directory for these instances')
     const maximumInlinePublicLength = getArg('-m', '--maximumInlinePublicLength', 128*1024+2, 'Maximum length of public binary data')
     const maximumInlinePrivateLength = getArg(null, '--maximumInlinePrivateLength', 64, 'Maximum length of private binary data')
-    const colourContentType = getArg(null, '--colourContentType', null, 'Colour content type')
-    const contentType = getArg('-c', '--contentType', null, 'Content type')
-    const recompressType = getArg(null, '--recompress', 'uncompressed,j2k,j2p', 'List of types to recompress')
+    const colourContentType = getArg(null, '--colourContentType', null, 'TODO Colour content type')
+    const contentType = getArg('-c', '--contentType', null, 'TODO Content type')
+    const recompressType = getArg(null, '--recompress', 'uncompressed,j2k,j2p', 'TODO List of types to recompress')
 
     const isHelp = hasArg('-h', '--help',false, 'Print help');
 
@@ -28,7 +27,24 @@ const main = async () => {
     if(!files.length || isHelp) {
         showHelp( 
             'mkdicomwebinstances (options) <inputfiles>',
-            'Make DICOMweb instances from binary Part 10 DICOM files.');
+            'Make DICOMweb instances from binary Part 10 DICOM files.\n'+
+            'The mkdicomwebinstances takes as input a set of DICOM files.  It then writes out instance level data\n'+
+            'as a summary of each dicom file read.  The default output is to just write the bulkdata, pixel data\n'+
+            'and instance level metadata files, however other options are possible.\n'+
+            ' \n'+
+            'The -e option writes out <studyUID>/deduplicated/instances/<HASH-KEY>.gz files that contain a reduced\n'+
+            'set of data.  These files also reference instances within the bulkdata directory which contain the\n'+
+            'removed data.\n'+
+            ' \n'+
+            'The -g writes out the same data as the -d, but writes it instead to files containing a list of the same\n'+
+            'data as would be generated for the -e option.\n'+
+            ' \n'+
+            'The -s option takes the data generated ONLY in this phase and writes it out as study/series/instances query results,\n'+
+            'as well as the series level metadata.  This option allows a quick creation of a complete, viewable study\n'+
+            'based on study data which doesn't exist.  \n'+
+            '\n'+
+            'TODO - implement type conversion when required to convert images from one format to another.\n'
+           );
         return
     }
     

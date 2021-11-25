@@ -11,6 +11,14 @@ const JSONReader = require('./JSONReader');
 const IdCreator = require('./IdCreator');
 const fs = require('fs')
 
+/**
+ * Processes a set of DICOM files, where the starting point is a list of directory names or file instances.
+ * This is used for importing DICOM files.
+ * 
+ * @param {*} files 
+ * @param {*} callback 
+ * @param {*} options 
+ */
 const processFiles = async (files,callback, options) => {
     for(let i=0; i<files.length; i++) {
         const file = files[i];
@@ -26,6 +34,22 @@ const processFiles = async (files,callback, options) => {
           }
         }
     }
+}
+
+/**
+ * Processes deduplicated instance data. 
+ * options contains various flags controlling the process:
+ *   notificationDirectory - the directory to read the study list from, defaults to
+ *     directoryName/studies
+ *   studies - a list of study instance UID's to update
+ * 
+ * Scans the notification directory for a list of studies (matching up with the provided list if it is present)
+ * Then, sends a notification to the callback  deduplicatedReader with an ID consisting of hte study
+ * UID/directory set, and the file name for the options directory.  The deduplicatedReader is then responsible
+ * for reading the full directory tree.
+ */
+const processDeduplicated = async (options, callback) => {
+   throw new Error('Not yet implemented');
 }
 
 const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
