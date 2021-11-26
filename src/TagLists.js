@@ -33,10 +33,13 @@ const addHash = (data,type) => {
 
 const TagSets = {
     PatientQuery, StudyQuery, PatientStudyQuery, SeriesQuery, SeriesExtract, InstanceQuery,
+    
+    QueryExtract: { remove: false, hashRef: false},
+    RemoveExtract: { remove: true, hashRef: true},
 
     extract: (data, type, tagSet, options) => {
         const ret = {};
-        const {remove,hash} = options || {hash:true};
+        const {remove,hashRef} = options || {};
         tagSet.forEach( tag => {
             const value = data[tag];
             if( value ) {
@@ -45,7 +48,7 @@ const TagSets = {
             }
         });
         const hashValue = addHash(ret,type);
-        if( hash ) {
+        if( hashRef ) {
             if( !data[DeduppedRef] ) {
                 data[DeduppedTag] = {vr: 'CS', Value:[DeduppedCreator]};
                 data[DeduppedRef] = {vr:'CS', Value:[]};

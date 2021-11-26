@@ -16,32 +16,36 @@ const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInsta
  */
 const CompleteStudyWriter = options => {
     const ret = async function () {
-        const {studyData} = this;
+        const { studyData } = this;
         if (!studyData) return;
         const { studyPath } = studyData;
-        
-        if( !studyData.numberOfInstances ) {
+
+        if (!studyData.numberOfInstances) {
             console.log('studyData.deduplicated is empty');
             delete this.studyData;
             return;
         }
 
-        // TODO - also check if anything was updated here, but that is presumed positive for now
-        if(options.isGroup ) {
-            const hashValue = hash(studyData.deduplicated);
-            await JSONWriter(path.join(studyPath,'deduplicated'),hashValue,studyData.deduplicated);
+        if (options.isGroup) {
+            if (studyData.dirty) {
+                const hashValue = hash(studyData.deduplicated);
+                console.log('Writing new deduplicated file', hashValue, 'because it is dirty');
+                await JSONWriter(path.join(studyPath, 'deduplicated'), hashValue, studyData.deduplicated);
+            } else {
+                console.log('Not writing new deduplicated data because it is clean');
+            }
         }
 
-        if( !options.isStudyData ) {
+        if (!options.isStudyData) {
             delete this.studyData;
             return;
         }
 
-        // TODO - move this whole chunk into StudyData, let it decide what is required to write
+        // TODO - move this to StudyData, to generate the various pieces
         // Start by writing an updated deduplicated file
-        console.log('Writing complete study data to', studyPath);
-        await JSONWriter(studyPath,'deduplicated',studyData.deduplicated);
-        
+        // TODO - move this to the very end - but put the check to see if it needs updating done here.
+        await JSONWriter(studyPath, 'deduplicated', studyData.deduplicated);
+
         const anInstance = await studyData.recombine(0);
         const series = {};
 
@@ -65,7 +69,6 @@ const CompleteStudyWriter = options => {
             series[seriesInstanceUid].instances.push(seriesInstance);
             series[seriesInstanceUid].instancesQuery.push(TagLists.extract(seriesInstance,
                 'instance', TagLists.InstanceQuery));
-            // TODO - add instanceQuery path too
         }
 
         const seriesList = [];
@@ -95,7 +98,7 @@ const CompleteStudyWriter = options => {
         await JSONWriter(studyPath, 'studies', [studyQuery]);
 
         const allStudies = await JSONReader(options.directoryName, "studies.gz", []);
-        if( !studyQuery[Tags.StudyInstanceUID] ) {
+        if (!studyQuery[Tags.StudyInstanceUID]) {
             console.error('studyQuery=', studyQuery, anInstance);
         }
         const studyUID = studyQuery[Tags.StudyInstanceUID].Value[0];
@@ -105,7 +108,7 @@ const CompleteStudyWriter = options => {
         } else {
             allStudies[studyIndex] = studyQuery;
         }
-        JSONWriter(options.directoryName,"studies", allStudies);
+        JSONWriter(options.directoryName, "studies", allStudies);
         delete this.studyData;
     };
 
@@ -113,19 +116,19 @@ const CompleteStudyWriter = options => {
      * Gets a current study data object, or completes the old one and generates a new one.
      * async call as it may need to store the current study data value.
      */
-    ret.getCurrentStudyData = async (callback,id) => {
+    ret.getCurrentStudyData = async (callback, id) => {
         let { studyData } = callback;
         const { studyInstanceUid } = id;
-        
-        if( studyData ) {
-            if( studyData.studyInstanceUid==studyInstanceUid ) {
+
+        if (studyData) {
+            if (studyData.studyInstanceUid == studyInstanceUid) {
                 return studyData;
             } else {
                 await callback.completeStudy(studyData);
             }
         }
         callback.studyData = new StudyData(id, options);
-        await callback.studyData.init(options); 
+        await callback.studyData.init(options);
         return callback.studyData;
     }
 

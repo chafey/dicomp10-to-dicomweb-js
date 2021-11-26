@@ -1,4 +1,5 @@
 const Tags = require('./Tags');
+const TagLists = require('./TagLists');
 const path = require('path');
 const fs = require('fs');
 const JSONReader = require('./JSONReader');
@@ -19,6 +20,7 @@ class StudyData {
     // The list of already existing files read in to create this object
     existingFiles = [];
     readHashes = {};
+    sopInstances = {};
 
     // Used to track if new instances have been added.
     newInstancesAdded = 0;
@@ -66,7 +68,7 @@ class StudyData {
                 console.error('Unable to read hashdata', hashKey);
                 return item
             }
-            this.extratData[hashKey] = item
+            this.extractData[hashKey] = item
         }
         return item
     }
@@ -98,11 +100,40 @@ class StudyData {
         this.extractData[hashKey] = item;
     }
 
+    sopExists(sopUID) {
+        const sopValue = sopUID && sopUID.Value && sopUID.Value[0] || sopUID;
+        return sopValue && this.sopInstances[sopValue]!==undefined;
+    }
+
     addDeduplicated(data) {
         if (!this.isGroup) return;
         // TODO - check the hash code on the added data, if it has already been seen then ignore this item.
-        this.newInstancesAdded++;
-        this.deduplicated.push(data);
+        if( this.internalAddDeduplicated(data) ) {
+            this.newInstancesAdded++;
+        }
+    }
+
+    /** Add the instance if not already present */
+    internalAddDeduplicated(data) {
+        const hashValue = TagLists.addHash(data,Tags.InstanceType);
+        if( this.readHashes[hashValue] ) return;
+        const sopUID = data[Tags.SOPInstanceUID];
+        const sopValue = sopUID && sopUID.Value && sopUID.Value[0] || sopUID;
+        const sopIndex = this.sopInstances[sopValue];
+        if( !sopValue ) {
+            console.warn('No sop value in ', data);
+            return;
+        }
+        this.readHashes[hashValue] = data;
+        if( sopIndex!==undefined ) {
+            console.log('Replacing SOP', sopValue, 'at index', sopIndex);
+            this.deduplicated[sopIndex] = data;
+        } else {
+            console.log('Adding deduplicated to study data', sopValue);
+            this.sopInstances[sopValue] = this.deduplicated.length;
+            this.deduplicated.push(data);
+        }
+        return hashValue;
     }
 
     async listJsonFiles(dir) {
@@ -160,12 +191,10 @@ class StudyData {
             this.readHashes[hash] = data;
             this.existingFiles.push(name);
             data.forEach(item => {
-                const itemHash = item[Tags.DeduppedHash];
                 const typeEl = item[Tags.DeduppedType];
                 const type = typeEl && typeEl.Value[0];
                 if (type == Tags.InstanceType) {
-                    console.log('Adding item');
-                    this.deduplicated.push(item);
+                    this.internalAddDeduplicated(item);
                 } else if (type == 'info') {
                     console.log('File info:', item);
                 } else {
