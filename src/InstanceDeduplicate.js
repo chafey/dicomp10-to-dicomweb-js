@@ -19,7 +19,7 @@ async function deduplicateSingleInstance(id, imageFrame) {
         return;
     }
     if( studyData.sopExists(sopUID) ) {
-        console.log('SOP Instance UID', sopUID, 'already exists, skipping');
+        // console.log('SOP Instance UID', sopUID.Value[0], 'already exists, skipping');
         // TODO - allow replace as an option
         return;
     }

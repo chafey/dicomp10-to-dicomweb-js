@@ -116,7 +116,10 @@ class StudyData {
     /** Add the instance if not already present */
     internalAddDeduplicated(data) {
         const hashValue = TagLists.addHash(data,Tags.InstanceType);
-        if( this.readHashes[hashValue] ) return;
+        if( this.readHashes[hashValue] ) {
+            // console.log('Not adding', hashValue, 'because the hash exists', this.readHashes[hashValue]);
+            return;
+        }
         const sopUID = data[Tags.SOPInstanceUID];
         const sopValue = sopUID && sopUID.Value && sopUID.Value[0] || sopUID;
         const sopIndex = this.sopInstances[sopValue];

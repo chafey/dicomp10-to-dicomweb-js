@@ -21,7 +21,7 @@ const SeriesQuery = [StudyInstanceUID,...SeriesExtract];
 const InstanceQuery = [Tags.SOPInstanceUID, Tags.InstanceNumber, Tags.SeriesInstanceUID, Tags.StudyInstanceUID];
 
 const addHash = (data,type) => {
-    if( data[DeduppedHash] ) return data[DeduppedHash];
+    if( data[DeduppedHash] ) return data[DeduppedHash].Value[0];
     const hashValue = objectHash(data);
     if( !data[DeduppedHash] ) {
         data[DeduppedTag] = {vr: 'CS', Value:[DeduppedCreator]};
