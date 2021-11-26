@@ -4,7 +4,7 @@ const JSONReader = require('./JSONReader');
 const path = require('path');
 const Tags = require('./Tags');
 const StudyData = require('./StudyData')
-
+const hash = require('object-hash');
 
 const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInstanceUID] && seriesInstance[Tags.SeriesInstanceUID].Value[0];
 
@@ -28,7 +28,8 @@ const CompleteStudyWriter = options => {
 
         // TODO - also check if anything was updated here, but that is presumed positive for now
         if(options.isGroup ) {
-            await JSONWriter(path.join(studyPath,'deduplicated'),'deduplicated',studyData.deduplicated);
+            const hashValue = hash(studyData.deduplicated);
+            await JSONWriter(path.join(studyPath,'deduplicated'),hashValue,studyData.deduplicated);
         }
 
         if( !options.isStudyData ) {
@@ -94,6 +95,9 @@ const CompleteStudyWriter = options => {
         await JSONWriter(studyPath, 'studies', [studyQuery]);
 
         const allStudies = await JSONReader(options.directoryName, "studies.gz", []);
+        if( !studyQuery[Tags.StudyInstanceUID] ) {
+            console.error('studyQuery=', studyQuery, anInstance);
+        }
         const studyUID = studyQuery[Tags.StudyInstanceUID].Value[0];
         const studyIndex = allStudies.findIndex(item => item[Tags.StudyInstanceUID].Value[0] == studyUID);
         if (studyIndex == -1) {
@@ -121,7 +125,7 @@ const CompleteStudyWriter = options => {
             }
         }
         callback.studyData = new StudyData(id, options);
-        await callback.studyData.init(); 
+        await callback.studyData.init(options); 
         return callback.studyData;
     }
 

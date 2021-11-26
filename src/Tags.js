@@ -41,7 +41,8 @@ const Tags = {
     
     // Type of hash instance
     DeduppedType: '00091012',
-
+    InstanceType: 'instance',
+    InfoType: 'info',
 };
 
 

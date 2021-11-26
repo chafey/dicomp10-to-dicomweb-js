@@ -21,6 +21,8 @@ async function deduplicateSingleInstance(id, imageFrame) {
         const hashKey = extracted[Tags.DeduppedHash].Value[0];
         await studyData.addExtracted(this, hashKey, extracted)
     }
+
+    TagLists.addHash(deduplicated,Tags.InstanceType);
     return deduplicated;
 }
 

@@ -24,6 +24,8 @@ const main = async () => {
     const maximumInlinePrivateLength = getArg(null, '--maximumInlinePrivateLength', 64, 'Maximum length of private binary data')
     const colourContentType = getArg(null, '--colourContentType', null, 'Colour content type')
     const contentType = getArg('-c', '--contentType', null, 'Content type')
+    const deduplicatedRoot = getArg(null,'--deduplicatedRoot', path.join(directoryName,'studies'), 'Set the deduplicate data directory');
+    const instancesRoot = getArg(null,'--instancesRoot', path.join(directoryName,'instances'), 'Set the deduplicate data directory');
     const isClean = hasArg(null,'--clean',true,'Clean the study output directory for these instances')
     const recompressType = getArg(null, '--recompress', 'uncompressed,j2k,j2p', 'List of types to recompress')
 
@@ -44,7 +46,7 @@ const main = async () => {
         isGroup, isInstanceMetadata, isDeduplicate,
         isStudyData, isClean,
         recompressType, contentType, colourContentType,
-        directoryName,
+        directoryName, deduplicatedRoot, instancesRoot, 
     }
 
     const callback = {

@@ -20,6 +20,17 @@ const SeriesQuery = [StudyInstanceUID,...SeriesExtract];
 
 const InstanceQuery = [Tags.SOPInstanceUID, Tags.InstanceNumber, Tags.SeriesInstanceUID, Tags.StudyInstanceUID];
 
+const addHash = (data,type) => {
+    if( data[DeduppedHash] ) return data[DeduppedHash];
+    const hashValue = objectHash(data);
+    if( !data[DeduppedHash] ) {
+        data[DeduppedTag] = {vr: 'CS', Value:[DeduppedCreator]};
+        data[DeduppedHash] = {vr:'CS', Value:[hashValue]};
+        data[DeduppedType] = {vr:'CS', Value:[type]};
+    }
+    return hashValue;
+}
+
 const TagSets = {
     PatientQuery, StudyQuery, PatientStudyQuery, SeriesQuery, SeriesExtract, InstanceQuery,
 
@@ -33,12 +44,7 @@ const TagSets = {
                 if( remove ) delete data[tag];
             }
         });
-        const hashValue = objectHash(ret);
-        if( !ret[DeduppedHash] ) {
-            ret[DeduppedTag] = {vr: 'CS', Value:[DeduppedCreator]};
-            ret[DeduppedHash] = {vr:'CS', Value:[hashValue]};
-            ret[DeduppedType] = {vr:'CS', Value:[type]};
-        }
+        const hashValue = addHash(ret,type);
         if( hash ) {
             if( !data[DeduppedRef] ) {
                 data[DeduppedTag] = {vr: 'CS', Value:[DeduppedCreator]};
@@ -48,6 +54,7 @@ const TagSets = {
         }
         return ret;
     },
+    addHash,
 };
 
 module.exports = TagSets;
