@@ -4,12 +4,14 @@ const getDataSet = require('./getDataSet')
 const JSONWriter = require('./JSONWriter')
 const InstanceDeduplicate = require('./InstanceDeduplicate')
 const DeduplicateWriter = require('./DeduplicateWriter')
-const HashDataWriter = require('./HashDataWriter')
 const ImageFrameWriter = require('./ImageFrameWriter');
 const CompleteStudyWriter = require('./CompleteStudyWriter');
-const JSONReader = require('./JSONReader');
 const IdCreator = require('./IdCreator');
 const fs = require('fs')
+const dirScanner = require('./dirScanner')
+const ScanStudy = require('./ScanStudy')
+const HashDataWriter = require('./HashDataWriter')
+const JSONReader = require('./JSONReader')
 
 /**
  * Processes a set of DICOM files, where the starting point is a list of directory names or file instances.
@@ -19,22 +21,33 @@ const fs = require('fs')
  * @param {*} callback 
  * @param {*} options 
  */
-const processFiles = async (files,callback, options) => {
-    for(let i=0; i<files.length; i++) {
-        const file = files[i];
-        if( fs.lstatSync(file).isDirectory() ) {
-          const names = await fs.promises.readdir(file);
-          await processFiles(names.map(dirFile => file+'/'+dirFile), callback, options);          
-        } else {
-          try {
-            const dicomp10stream = fs.createReadStream(file);
-            await dicomp10todicomweb(dicomp10stream, callback, options);
-          } catch(e) {
-              console.error("Couldn't process", file, e);
-          }
+const processFiles = async (files, callbacks, options) => {
+    return await dirScanner(files, {
+        ...options,
+        callback: async file => {
+            try {
+                const dicomp10stream = fs.createReadStream(file);
+                await dicomp10todicomweb(dicomp10stream, callbacks, options);
+            } catch (e) {
+                console.error("Couldn't process", file, e);
+            }
         }
-    }
+    })
 }
+
+/**
+ * Processes a study directory, matching up study instance UIDs.  Either processes the 
+ * deduplicated group directory or the instances directory, or the notifications directory.
+ * @param {*} callback 
+ * @param {*} options 
+ */
+const processStudyDir = async (studyUids, callbacks, options) => {
+    return await dirScanner(options[options.scanStudies], {
+        ...options,
+        recursive: false,
+        callback: (dir,name) => callbacks.scanStudy(dir,name) 
+    });
+};
 
 /**
  * Processes deduplicated instance data. 
@@ -49,7 +62,7 @@ const processFiles = async (files,callback, options) => {
  * for reading the full directory tree.
  */
 const processDeduplicated = async (options, callback) => {
-   throw new Error('Not yet implemented');
+    throw new Error('Not yet implemented');
 }
 
 const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
@@ -58,15 +71,19 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
 
     // Parse it
     const dataSet = dicomParser.parseDicom(buffer)
-    
+
     // TODO - make this a streaming parse
     // const dataSet = dicomParser.parseDicom(dicomp10stream)
 
+    const studyInstanceUid = dataSet.string('x0020000d')
+
+    if( !studyInstanceUid ) return;
+
     // Extract uids
     const id = callback.uids({
-        studyInstanceUid : dataSet.string('x0020000d'),
-        seriesInstanceUid : dataSet.string('x0020000e'),
-        sopInstanceUid : dataSet.string('x00080018'),
+        studyInstanceUid,
+        seriesInstanceUid: dataSet.string('x0020000e'),
+        sopInstanceUid: dataSet.string('x00080018'),
         transferSyntaxUid: dataSet.string('x00020010')
     })
 
@@ -81,7 +98,7 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
 
     // convert to DICOMweb MetaData and BulkData
     const result = await getDataSet(dataSet, generator, options);
-    
+
     await callback.metadata(id, result.metadata)
 
     // resolve promise with statistics
@@ -98,5 +115,7 @@ dicomp10todicomweb.CompleteStudyWriter = CompleteStudyWriter;
 dicomp10todicomweb.JSONReader = JSONReader;
 dicomp10todicomweb.processFiles = processFiles;
 dicomp10todicomweb.IdCreator = IdCreator;
+dicomp10todicomweb.processStudyDir = processStudyDir;
+dicomp10todicomweb.ScanStudy = ScanStudy;
 
 module.exports = dicomp10todicomweb

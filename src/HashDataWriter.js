@@ -1,5 +1,6 @@
 const zlib = require('zlib');
-const hash = require('object-hash');
+const hashFactory = require('node-object-hash');
+const hasher = hashFactory();
 const path = require('path');
 const Tags = require('./Tags');
 const WriteStream = require('./WriteStream');
@@ -25,7 +26,7 @@ HashDataWriter.createHashPath = (data) => {
     const isRaw = ArrayBuffer.isView(data);
     const extension = (isRaw ? '.raw' : '.json');
     const existingHash = data[Tags.DeduppedHash];
-    const hashValue = existingHash && existingHash.Value[0] || hash(data);
+    const hashValue = existingHash && existingHash.Value[0] || hasher.hash(data);
     return {
         // Use string concat as this value is used for the BulkDataURI which needs forward slashes
         dirName: 'bulkdata/' + hashValue.substring(0, 3) + '/' + hashValue.substring(3, 5),

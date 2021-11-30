@@ -1,5 +1,8 @@
 const fs = require('fs');
 const zlib = require('zlib');
+const path = require('path');
+
+let writeCount = 0;
 
 /** Create an optionally gzipped stream,
  * where the write operations are performed in order executed,
@@ -13,7 +16,9 @@ const WriteStream = (dir,name,options={}) => {
     }
     if( options.mkdir ) fs.mkdirSync(dir, { recursive: true })
     
-    const rawStream = fs.createWriteStream(dir + '/' + name);
+    const tempName = path.join(dir,'tempFile-'+Math.round(Math.random()*1000000000));
+    const finalName = path.join(dir,name);
+    const rawStream = fs.createWriteStream(tempName);
     const closePromise = new Promise((resolve, reject) => {
         rawStream.on('close', () => {
             resolve('closed');
@@ -33,6 +38,9 @@ const WriteStream = (dir,name,options={}) => {
     const close = async function() {
         await this.writeStream.end();
         await this.closePromise;
+        writeCount++;
+        if( writeCount % 1000 == 0 ) console.log("Wrote", finalName);
+        await fs.rename(tempName,finalName, () => true ); // console.log('Renamed', tempName,finalName));
     }
 
     return {

@@ -4,9 +4,6 @@ const JSONReader = require('./JSONReader');
 const path = require('path');
 const Tags = require('./Tags');
 const StudyData = require('./StudyData')
-const hash = require('object-hash');
-
-const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInstanceUID] && seriesInstance[Tags.SeriesInstanceUID].Value[0];
 
 /**
  * CompleteStudyWriter takes the deduplicated data values, all loaded into the study parameter,
@@ -18,7 +15,7 @@ const CompleteStudyWriter = options => {
     const ret = async function () {
         const { studyData } = this;
         if (!studyData) return;
-        const { studyPath } = studyData;
+        const { studyPath, deduplicatedPath } = studyData;
 
         if (!studyData.numberOfInstances) {
             console.log('studyData.deduplicated is empty');
@@ -28,9 +25,7 @@ const CompleteStudyWriter = options => {
 
         if (options.isGroup) {
             if (studyData.dirty) {
-                const hashValue = hash(studyData.deduplicated);
-                console.log('Writing new deduplicated file', hashValue, 'because it is dirty');
-                await JSONWriter(path.join(studyPath, 'deduplicated'), hashValue, studyData.deduplicated);
+                await studyData.writeDeduplicatedGroup();
             } else {
                 console.log('Not writing new deduplicated data because it is clean');
             }
@@ -41,61 +36,14 @@ const CompleteStudyWriter = options => {
             return;
         }
 
-        // TODO - move this to StudyData, to generate the various pieces
-        // Start by writing an updated deduplicated file
-        // TODO - move this to the very end - but put the check to see if it needs updating done here.
-        await JSONWriter(studyPath, 'deduplicated', studyData.deduplicated);
-
-        const anInstance = await studyData.recombine(0);
-        const series = {};
-
-        for (let i = 0; i < studyData.numberOfInstances; i++) {
-            const seriesInstance = await studyData.recombine(i);
-            const seriesInstanceUid = getSeriesInstanceUid(seriesInstance);
-            if (!seriesInstanceUid) {
-                console.log('Cant get seriesUid from', Tags.SeriesInstanceUID, seriesInstance);
-                continue;
-            }
-            if (!series[seriesInstanceUid]) {
-                const seriesQuery = TagLists.extract(seriesInstance, 'series', TagLists.SeriesQuery);
-                const seriesPath = path.join(studyPath, 'series', seriesInstanceUid);
-                series[seriesInstanceUid] = {
-                    seriesPath,
-                    seriesQuery,
-                    instances: [],
-                    instancesQuery: [],
-                };
-            }
-            series[seriesInstanceUid].instances.push(seriesInstance);
-            series[seriesInstanceUid].instancesQuery.push(TagLists.extract(seriesInstance,
-                'instance', TagLists.InstanceQuery));
+        const isDirtyMetadata = await studyData.dirtyMetadata();
+        if( !isDirtyMetadata ) {
+            console.log('Study metadata', studyData.studyInstanceUid, 'has clean metadata, not writing');
+            delete this.studyData;
+            return;
         }
 
-        const seriesList = [];
-        const modalitiesInStudy = [];
-        let numberOfInstances = 0;
-        let numberOfSeries = 0;
-        for (const seriesUid of Object.keys(series)) {
-            const singleSeries = series[seriesUid];
-            const { seriesQuery, seriesPath, instances, instancesQuery } = singleSeries;
-            seriesQuery[Tags.NumberOfSeriesRelatedInstances] = { vr: 'IS', Value: [instances.length] };
-            numberOfInstances += instances.length;
-            numberOfSeries++;
-            seriesList.push(seriesQuery);
-            const modality = seriesQuery[Tags.Modality].Value[0];
-            if (modalitiesInStudy.indexOf(modality) == -1) modalitiesInStudy.push(modality);
-            await JSONWriter(seriesPath, 'metadata', instances);
-            await JSONWriter(seriesPath, 'series', [seriesQuery]);
-            await JSONWriter(seriesPath, 'instances', instancesQuery)
-        }
-
-        await JSONWriter(studyPath, 'series', seriesList);
-
-        const studyQuery = TagLists.extract(anInstance, 'study', TagLists.PatientStudyQuery);
-        studyQuery[Tags.ModalitiesInStudy] = { Value: modalitiesInStudy, vr: 'CS' };
-        studyQuery[Tags.NumberOfStudyRelatedInstances] = { Value: [numberOfInstances], vr: 'IS' };
-        studyQuery[Tags.NumberOfStudyRelatedSeries] = { Value: [numberOfSeries], vr: 'IS' };
-        await JSONWriter(studyPath, 'studies', [studyQuery]);
+        const studyQuery = await studyData.writeMetadata();
 
         const allStudies = await JSONReader(options.directoryName, "studies.gz", []);
         if (!studyQuery[Tags.StudyInstanceUID]) {

@@ -1,4 +1,5 @@
-const objectHash = require('object-hash');
+const hashFactory = require('node-object-hash');
+const hasher = hashFactory();
 const Tags = require('./Tags');
 
 const {PatientID, PatientName, IssuerOfPatientID} = Tags;
@@ -22,7 +23,7 @@ const InstanceQuery = [Tags.SOPInstanceUID, Tags.InstanceNumber, Tags.SeriesInst
 
 const addHash = (data,type) => {
     if( data[DeduppedHash] ) return data[DeduppedHash].Value[0];
-    const hashValue = objectHash(data);
+    const hashValue = hasher.hash(data);
     if( !data[DeduppedHash] ) {
         data[DeduppedTag] = {vr: 'CS', Value:[DeduppedCreator]};
         data[DeduppedHash] = {vr:'CS', Value:[hashValue]};

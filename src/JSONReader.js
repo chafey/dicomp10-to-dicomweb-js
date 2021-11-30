@@ -2,8 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
+let count = 0;
+
 const JSONReader = async (dir, name, def) => {
     let finalData;
+    count++;
+    if( count % 128 == 0 ) console.log('Reading file #', count, name);
     try {
         let rawdata = fs.readFileSync(path.join(dir, name));
         if (name.indexOf('.gz') != -1) {

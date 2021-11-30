@@ -3,6 +3,8 @@ const uids = require('./uids');
 const WriteStream = require('./WriteStream')
 
 const ImageFrameWriter = options => {
+    const {verbose} = options;
+    
     return async (id, index, imageFrame) => {
         const { transferSyntaxUid } = id;
         const type = uids[transferSyntaxUid] || uids.default;
@@ -15,7 +17,7 @@ const ImageFrameWriter = options => {
         await writeStream.write(imageFrame);
         await writeStream.write('\r\n--BOUNDARY_FIXED_32934857949532587--');
         await writeStream.close();
-        console.log('Wrote image frame', id.sopInstanceUid, index + 1)
+        if( verbose ) console.log('Wrote image frame', id.sopInstanceUid, index + 1)
         return `instances/${id.sopInstanceUid}/frames`
     };
 }

@@ -3,6 +3,11 @@ const TagLists = require('./TagLists');
 const path = require('path');
 const fs = require('fs');
 const JSONReader = require('./JSONReader');
+const JSONWriter = require('./JSONWriter')
+const hashFactory = require('node-object-hash');
+const hasher = hashFactory();
+
+const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInstanceUID] && seriesInstance[Tags.SeriesInstanceUID].Value[0];
 
 /**
  * StudyData contains information about the grouped study data.  It is used to create
@@ -19,31 +24,37 @@ class StudyData {
     extractData = {};
     // The list of already existing files read in to create this object
     existingFiles = [];
+    // The read hashes is the hashes of the files that are read, both as groups and internally
     readHashes = {};
+    // The deduplicated hashes are just the hashes for individual items
+    deduplicatedHashes = {};
     sopInstances = {};
 
     // Used to track if new instances have been added.
     newInstancesAdded = 0;
 
-    constructor({ studyInstanceUid, studyPath }, { isGroup }) {
+    constructor({ studyInstanceUid, studyPath, deduplicatedPath, deduplicatedInstancesPath}, { isGroup, }) {
         this.studyInstanceUid = studyInstanceUid;
         this.studyPath = studyPath;
         this.isGroup = isGroup;
+        this.deduplicatedPath = deduplicatedPath;
+        this.deduplicatedInstancesPath = deduplicatedInstancesPath;
     }
 
     /**
      * Clean the directory, and/or read existing data in the isInstances or isGroup files.
      * TODO - implement this.
      */
-    async init({ instancesRoot, deduplicatedRoot, clean }) {
+    async init({ clean }) {
         if (clean) {
             // Wipe out the study directory entirely, as well as the deduplicatedRoot and instancesRoot
         }
-        if (deduplicatedRoot) {
-            await this.readDeduplicated(path.join(deduplicatedRoot, this.studyInstanceUid, 'deduplicated'));
+        console.log('paths', this.deduplicatedPath, this.deduplicatedInstancesPath);
+        if (this.deduplicatedPath) {
+            await this.readDeduplicated(this.deduplicatedPath);
         }
-        if (instancesRoot) {
-            await this.readDeduplicated(path.join(instancesRoot, this.studyInstanceUid, 'deduplicated', 'instances'));
+        if (this.deduplicatedInstancesPath) {
+            await this.readDeduplicated(this.deduplicatedInstancesPath);
         }
     }
 
@@ -58,6 +69,28 @@ class StudyData {
      */
     get dirty() {
         return this.newInstancesAdded > 0 || this.existingFiles.length > 1;
+    }
+
+    async dirtyMetadata() {
+        if( this.dirty ) {
+            console.log('Study data is dirty - need to write updated file');
+            return true;
+        }
+        try {
+            const deduplicatedTopFile = await JSONReader(this.studyPath, 'deduplicated.gz');
+            if( !deduplicatedTopFile ) {
+                return true;
+            }
+            const info = deduplicatedTopFile[0];
+            if( !info || !info[Tags.DeduppedHash] || info[Tags.DeduppedType].Value[0]!='info') {
+                return true;
+            }
+            const hashValue = info[Tags.DeduppedHash].Value[0];
+            return this.existingFiles[0].indexOf(hashValue)==-1;
+        } catch(e) {
+            console.log('Assume study metadata is dirty', e);
+            return true;
+        }
     }
 
     async getOrLoadExtract(hashKey) {
@@ -114,10 +147,10 @@ class StudyData {
     }
 
     /** Add the instance if not already present */
-    internalAddDeduplicated(data) {
+    internalAddDeduplicated(data, fileName = 'internal') {
         const hashValue = TagLists.addHash(data,Tags.InstanceType);
-        if( this.readHashes[hashValue] ) {
-            // console.log('Not adding', hashValue, 'because the hash exists', this.readHashes[hashValue]);
+        if( this.deduplicatedHashes[hashValue] ) {
+            // console.log('Not adding', hashValue, 'because the hash exists');
             return;
         }
         const sopUID = data[Tags.SOPInstanceUID];
@@ -127,12 +160,12 @@ class StudyData {
             console.warn('No sop value in ', data);
             return;
         }
-        this.readHashes[hashValue] = data;
+        this.deduplicatedHashes[hashValue] = data;
+        this.readHashes[hashValue] = fileName;
         if( sopIndex!==undefined ) {
             console.log('Replacing SOP', sopValue, 'at index', sopIndex);
             this.deduplicated[sopIndex] = data;
         } else {
-            console.log('Adding deduplicated to study data', sopValue);
             this.sopInstances[sopValue] = this.deduplicated.length;
             this.deduplicated.push(data);
         }
@@ -148,9 +181,9 @@ class StudyData {
             return {
                 ...stat,
                 name,
-                hash: name.substring(0, name.indexOf('.')),
+                hash: this.removeGz(name),
             };
-        }).sort((a, b) => a.mtimeMs - b.mtimeMs);
+        }).sort((a, b) => b.mtimeMs - a.mtimeMs);
         return statInfo;
     }
 
@@ -177,10 +210,12 @@ class StudyData {
             for (let i = 0; i < files.length; i++) {
                 const stat = files[i];
                 const { hash } = stat;
-                console.log('Checking for', stat.name, hash);
-                if (this.readHashes[hash]) continue;
+                if (this.readHashes[hash]) {
+                    continue;
+                }
                 await this.readDeduplicatedFile(deduplicatedDirectory, stat);
             }
+            console.log('Done checking', deduplicatedDirectory);
         } catch (e) {
             // No-op console.log(e);
         }
@@ -189,17 +224,23 @@ class StudyData {
     async readDeduplicatedFile(dir, stat) {
         const { hash, name } = stat;
         try {
-            console.log('Reading deduplicated file', name);
+            if( this.verbose ) console.log('Reading deduplicated file', name);
             const data = await JSONReader(dir, name);
-            this.readHashes[hash] = data;
+            this.readHashes[hash] = name;
             this.existingFiles.push(name);
-            data.forEach(item => {
+            const listData = Array.isArray(data) && data || [data];
+            listData.forEach(item => {
                 const typeEl = item[Tags.DeduppedType];
                 const type = typeEl && typeEl.Value[0];
                 if (type == Tags.InstanceType) {
-                    this.internalAddDeduplicated(item);
+                    this.internalAddDeduplicated(item, name);
                 } else if (type == 'info') {
-                    console.log('File info:', item);
+                    const refs = item[Tags.DeduppedRef];
+                    if( refs && refs.Value ) {
+                        refs.Value.forEach(hashValue => {
+                            this.readHashes[hashValue] = hashValue+'.gz';
+                        });
+                    }
                 } else {
                     console.log('Unknown type:', type);
                 }
@@ -207,6 +248,91 @@ class StudyData {
         } catch (e) {
             console.error('Unable to read', dir, name);
         }
+    }
+
+    async writeMetadata() {
+        const anInstance = await this.recombine(0);
+        const series = {};
+
+        for (let i = 0; i < this.numberOfInstances; i++) {
+            const seriesInstance = await this.recombine(i);
+            const seriesInstanceUid = getSeriesInstanceUid(seriesInstance);
+            if (!seriesInstanceUid) {
+                console.log('Cant get seriesUid from', Tags.SeriesInstanceUID, seriesInstance);
+                continue;
+            }
+            if (!series[seriesInstanceUid]) {
+                const seriesQuery = TagLists.extract(seriesInstance, 'series', TagLists.SeriesQuery);
+                const seriesPath = path.join(this.studyPath, 'series', seriesInstanceUid);
+                series[seriesInstanceUid] = {
+                    seriesPath,
+                    seriesQuery,
+                    instances: [],
+                    instancesQuery: [],
+                };
+            }
+            series[seriesInstanceUid].instances.push(seriesInstance);
+            series[seriesInstanceUid].instancesQuery.push(TagLists.extract(seriesInstance,
+                'instance', TagLists.InstanceQuery));
+        }
+
+        const seriesList = [];
+        const modalitiesInStudy = [];
+        let numberOfInstances = 0;
+        let numberOfSeries = 0;
+        for (const seriesUid of Object.keys(series)) {
+            const singleSeries = series[seriesUid];
+            const { seriesQuery, seriesPath, instances, instancesQuery } = singleSeries;
+            seriesQuery[Tags.NumberOfSeriesRelatedInstances] = { vr: 'IS', Value: [instances.length] };
+            numberOfInstances += instances.length;
+            numberOfSeries++;
+            seriesList.push(seriesQuery);
+            const modality = seriesQuery[Tags.Modality].Value[0];
+            if (modalitiesInStudy.indexOf(modality) == -1) modalitiesInStudy.push(modality);
+            await JSONWriter(seriesPath, 'metadata', instances);
+            await JSONWriter(seriesPath, 'series', [seriesQuery]);
+            await JSONWriter(seriesPath, 'instances', instancesQuery)
+        }
+
+        await JSONWriter(this.studyPath, 'series', seriesList);
+
+        const studyQuery = TagLists.extract(anInstance, 'study', TagLists.PatientStudyQuery);
+        studyQuery[Tags.ModalitiesInStudy] = { Value: modalitiesInStudy, vr: 'CS' };
+        studyQuery[Tags.NumberOfStudyRelatedInstances] = { Value: [numberOfInstances], vr: 'IS' };
+        studyQuery[Tags.NumberOfStudyRelatedSeries] = { Value: [numberOfSeries], vr: 'IS' };
+        await JSONWriter(this.studyPath, 'studies', [studyQuery]);
+
+        const infoItem = this.createInfo();
+        await JSONWriter(this.studyPath, 'deduplicated', [infoItem,...this.deduplicated]);
+        
+        return studyQuery;
+    }
+
+    /**
+     * Creates an information item containing the hash value of this item type.
+     */
+    createInfo() {
+        const data = {};
+        const hashValue = hasher.hash(this.deduplicated);
+        data[Tags.DeduppedTag] = {vr: 'CS', Value:[Tags.DeduppedCreator]};
+        data[Tags.DeduppedHash] = {vr:'CS', Value:[hashValue]};
+        data[Tags.DeduppedType] = {vr:'CS', Value:['info']};
+        return data;
+    }
+
+    removeGz(name) {
+        const gzIndex = name.indexOf('.gz');
+        return gzIndex>0 && name.substring(0,gzIndex) || name;
+    }
+
+    async writeDeduplicatedGroup() {
+        const data = this.createInfo();
+        const hashValue = data[Tags.DeduppedHash].Value[0];
+        console.log('Writing new deduplicated file', hashValue);
+        data[Tags.DeduppedRef] = {vr:'CS', Value:
+          Object.keys(this.readHashes).filter(hash => this.deduplicatedHashes[hashValue]==undefined )
+        };
+        await JSONWriter(this.deduplicatedPath, hashValue, [data,...this.deduplicated]);
     }
 }
 

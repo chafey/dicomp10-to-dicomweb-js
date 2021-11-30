@@ -12,6 +12,7 @@ const getArg = (name, longName, def, description) => {
 }
 
 const hasArg = (name,longName, def, description) => {
+    def = def===undefined ? false : def;
     allArgs[name || longName] = {hasArg: false, longName, description};
     for(let i=2; i<process.argv.length; i++) {
         const val = process.argv[i];

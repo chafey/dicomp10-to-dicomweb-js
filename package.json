@@ -23,7 +23,10 @@
     "DICOM",
     "DICOMweb"
   ],
-  "author": ["Chris Hafey <chafey@gmail.com>","Bill Wallace <bill.wallace@radicalimaging.com>"],
+  "author": [
+    "Chris Hafey <chafey@gmail.com>",
+    "Bill Wallace <bill.wallace@radicalimaging.com>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/chafey/dicomp10-to-dicomweb-js/issues"
@@ -35,6 +38,7 @@
   "dependencies": {
     "dicom-parser": "^1.8.11",
     "hash-object": "^0.1.7",
+    "node-object-hash": "^2.3.10",
     "object-hash": "^2.2.0"
   }
 }

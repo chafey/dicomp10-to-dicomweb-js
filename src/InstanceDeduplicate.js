@@ -47,7 +47,7 @@ const InstanceDeduplicate = options =>
             await JSONWriter(id.sopInstanceRootPath, 'metadata', imageFrame);
         }
         if( !options.isDeduplicate && !options.isGroup ) {
-            console.log('No deduplicate being generated', options);
+            console.log('No deduplicate being generated');
             return;
         }
         if (!this.deduplicateSingleInstance) this.deduplicateSingleInstance = deduplicateSingleInstance;

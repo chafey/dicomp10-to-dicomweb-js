@@ -6,7 +6,7 @@ const JSONWriter = async (dir, name, data, options = {gzip:true}) => {
     let writeStream = WriteStream(dir,fileName, {mkdir: true, gzip: options.gzip})
     await writeStream.write(JSON.stringify(data, null, 1));
     await writeStream.close();
-    console.log('Wrote', dir, fileName);
+    if( options.verbose ) console.log('Wrote', dir, fileName);
 }
 
 module.exports=JSONWriter

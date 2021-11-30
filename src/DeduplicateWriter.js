@@ -1,5 +1,6 @@
 const zlib = require('zlib');
-const hash = require('object-hash');
+const hashFactory = require('node-object-hash');
+const hasher = hashFactory();
 const fs = require('fs')
 const path = require('path');
 const JSONWriter = require('./JSONWriter');
@@ -7,7 +8,7 @@ const Tags = require('./Tags');
 const TagLists = require('./TagLists');
 
 const writeDeduplicatedFile = async (dir, data, hashValue) => {
-    if( !hashValue ) hashValue = hash(data);
+    if( !hashValue ) hashValue = hasher.hash(data);
     console.log('Writing deduplicated instance to', dir, hashValue);
     await JSONWriter(dir, hashValue, data);
     return hashValue;
@@ -15,10 +16,9 @@ const writeDeduplicatedFile = async (dir, data, hashValue) => {
 
 
 const perInstanceWriter = async (id, data) => {
-    const { deduplicatedPath } = id;
+    const { deduplicatedInstancesPath } = id;
     const hashValue = TagLists.addHash(data,Tags.InstanceType);
-    const instanceDir = path.join(deduplicatedPath, 'instances');
-    return await writeDeduplicatedFile(instanceDir, [data], hashValue);
+    return await writeDeduplicatedFile(deduplicatedInstancesPath, [data], hashValue);
 };
 
 /** Writes out JSON files to the given file name.  Automatically GZips them, and adds the extension */
