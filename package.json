@@ -1,6 +1,6 @@
 {
   "name": "dicomp10-to-dicomweb",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Library to convert DICOMP10 to DICOMweb format",
   "main": "src/index.js",
   "directories": {
@@ -8,6 +8,8 @@
   },
   "bin": {
     "mkdicomweb": "bin/mkdicomweb.js",
+    "mkdicomwebdeduplicated": "bin/mkdicomwebdeduplicated.js",
+    "mkdicomwebdeduplicatedgroup": "bin/mkdicomwebdeduplicatedgroup.js",
     "mkdicomwebinstances": "bin/mkdicomwebinstances.js",
     "mkdicomwebstudy": "bin/mkdicomwebstudy.js",
     "staticwadojs": "bin/mkdicomweb.js"

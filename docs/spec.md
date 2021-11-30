@@ -3,12 +3,12 @@
 ## Library
 
 This library takes as input a DICOM P10 bitstream and produces the following:
-* Summary Metadata - Javascript object with Study UID, Series UID, SOP Instance UID, Transfer Syntax, etc
 * Image Frames - binary data of each image frame in the stored transfer syntax 
 * Bulk Data - binary data for values larger than the configured inline length
-* Full Metadata - JavaScript object that serializes to DICOMweb JSON format
+* Full Metadata - DICOMweb JSON metadata
 
-Note - image frames and bulk data are not wrapped in multi-part mime headers
+Note - image frames is wrapped in multi-part mime headers, but
+bulk data is not.  Bulk data is identified by the extension.
 
 ### TODO
 
@@ -17,7 +17,6 @@ Note - image frames and bulk data are not wrapped in multi-part mime headers
   * Custom transformations
   * Strip out private data
   * De-identification
-* Figure out how to store the P10 header (e.g. transfer syntax uid)?
 * Consider storing encoding details so original P10 can be recreated without any loss
   * undefined lengths
   * frame fragmentation

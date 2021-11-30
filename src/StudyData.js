@@ -7,7 +7,7 @@ const JSONWriter = require('./JSONWriter')
 const hashFactory = require('node-object-hash');
 const hasher = hashFactory();
 
-const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInstanceUID] && seriesInstance[Tags.SeriesInstanceUID].Value[0];
+const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInstanceUID] && seriesInstance[Tags.SeriesInstanceUID].Value && seriesInstance[Tags.SeriesInstanceUID].Value[0];
 
 /**
  * StudyData contains information about the grouped study data.  It is used to create
@@ -35,6 +35,7 @@ class StudyData {
 
     constructor({ studyInstanceUid, studyPath, deduplicatedPath, deduplicatedInstancesPath}, { isGroup, }) {
         this.studyInstanceUid = studyInstanceUid;
+        console.log('Processing', studyInstanceUid);
         this.studyPath = studyPath;
         this.isGroup = isGroup;
         this.deduplicatedPath = deduplicatedPath;
@@ -49,7 +50,6 @@ class StudyData {
         if (clean) {
             // Wipe out the study directory entirely, as well as the deduplicatedRoot and instancesRoot
         }
-        console.log('paths', this.deduplicatedPath, this.deduplicatedInstancesPath);
         if (this.deduplicatedPath) {
             await this.readDeduplicated(this.deduplicatedPath);
         }

@@ -1,8 +1,4 @@
-const TagLists = require('./TagLists');
 const JSONWriter = require('./JSONWriter');
-const JSONReader = require('./JSONReader');
-const path = require('path');
-const Tags = require('./Tags');
 const StudyData = require('./StudyData')
 
 /**
@@ -15,8 +11,7 @@ const CompleteStudyWriter = options => {
     const ret = async function () {
         const { studyData } = this;
         if (!studyData) return;
-        const { studyPath, deduplicatedPath } = studyData;
-
+        
         if (!studyData.numberOfInstances) {
             console.log('studyData.deduplicated is empty');
             delete this.studyData;
@@ -26,13 +21,15 @@ const CompleteStudyWriter = options => {
         if (options.isGroup) {
             if (studyData.dirty) {
                 await studyData.writeDeduplicatedGroup();
+                console.log('Wrote updated deduplicated data for study', studyData.studyInstanceUid);
             } else {
-                console.log('Not writing new deduplicated data because it is clean');
+                console.log('Not writing new deduplicated data because it is clean:', studyData.studyInstanceUid);
             }
         }
 
         if (!options.isStudyData) {
             delete this.studyData;
+            console.log('Study metadata not being generated for:', studyData.studyInstanceUid);
             return;
         }
 
@@ -57,6 +54,7 @@ const CompleteStudyWriter = options => {
             allStudies[studyIndex] = studyQuery;
         }
         JSONWriter(options.directoryName, "studies", allStudies);
+        console.log('Wrote study metadata/query files for', studyData.StudyInstanceUID);
         delete this.studyData;
     };
 
