@@ -1,7 +1,12 @@
 const JSONWriter = require('./JSONWriter');
 const TagLists = require('./TagLists');
 const Tags = require('./Tags');
-const extractors = { patient: TagLists.PatientQuery, study: TagLists.StudyQuery, series: TagLists.SeriesExtract };
+const extractors = { 
+    patient: TagLists.PatientQuery, 
+    study: TagLists.StudyQuery, 
+    series: TagLists.SeriesExtract,
+    image: TagLists.ImageExtract,
+ };
 
 /**
  * This is an instance listener - the way this one works is that it listens for instance metadata.

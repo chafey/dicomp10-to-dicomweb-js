@@ -306,6 +306,8 @@ class StudyData {
         await JSONWriter(this.studyPath, 'studies', [studyQuery]);
 
         const infoItem = this.createInfo();
+        console.log('Writing deduplicated study data with', Object.values(this.extractData).length,
+          'extract items and', this.deduplicated.length, 'instance items');
         await JSONWriter(this.studyPath, 'deduplicated', 
           [infoItem,...Object.values(this.extractData),...this.deduplicated]);
         
@@ -333,8 +335,9 @@ class StudyData {
     async writeDeduplicatedGroup() {
         const data = this.createInfo();
         const hashValue = data[Tags.DeduppedHash].Value[0];
-        console.log('Writing new deduplicated file', hashValue);
-        data[Tags.DeduppedRef] = {vr:'CS', Value:
+        console.log('Writing deduplicated hash data set data with', Object.values(this.extractData).length,
+        'extract items and', this.deduplicated.length, 'instance items');
+data[Tags.DeduppedRef] = {vr:'CS', Value:
           Object.keys(this.readHashes).filter(hash => this.deduplicatedHashes[hashValue]==undefined )
         };
         await JSONWriter(this.deduplicatedPath, hashValue, 
