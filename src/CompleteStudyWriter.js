@@ -1,5 +1,7 @@
-const JSONWriter = require('./JSONWriter');
+const JSONWriter = require('./JSONWriter')
 const StudyData = require('./StudyData')
+const JSONReader = require('./JSONReader')
+const Tags = require('./Tags')
 
 /**
  * CompleteStudyWriter takes the deduplicated data values, all loaded into the study parameter,
@@ -54,7 +56,7 @@ const CompleteStudyWriter = options => {
             allStudies[studyIndex] = studyQuery;
         }
         JSONWriter(options.directoryName, "studies", allStudies);
-        console.log('Wrote study metadata/query files for', studyData.StudyInstanceUID);
+        console.log('Wrote study metadata/query files for', studyData.studyInstanceUid);
         delete this.studyData;
     };
 

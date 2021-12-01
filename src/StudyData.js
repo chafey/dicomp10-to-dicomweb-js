@@ -242,7 +242,10 @@ class StudyData {
                         });
                     }
                 } else {
-                    console.log('Unknown type:', type);
+                    const hashValue = item[Tags.DeduppedHash] && item[Tags.DeduppedHash].Value[0];
+                    if( hashValue ) {
+                        this.extractData[hashValue] = item;
+                    }
                 }
             });
         } catch (e) {
@@ -303,7 +306,8 @@ class StudyData {
         await JSONWriter(this.studyPath, 'studies', [studyQuery]);
 
         const infoItem = this.createInfo();
-        await JSONWriter(this.studyPath, 'deduplicated', [infoItem,...this.deduplicated]);
+        await JSONWriter(this.studyPath, 'deduplicated', 
+          [infoItem,...Object.values(this.extractData),...this.deduplicated]);
         
         return studyQuery;
     }
@@ -325,6 +329,7 @@ class StudyData {
         return gzIndex>0 && name.substring(0,gzIndex) || name;
     }
 
+    /** Writes the deduplicated group */
     async writeDeduplicatedGroup() {
         const data = this.createInfo();
         const hashValue = data[Tags.DeduppedHash].Value[0];
@@ -332,7 +337,8 @@ class StudyData {
         data[Tags.DeduppedRef] = {vr:'CS', Value:
           Object.keys(this.readHashes).filter(hash => this.deduplicatedHashes[hashValue]==undefined )
         };
-        await JSONWriter(this.deduplicatedPath, hashValue, [data,...this.deduplicated]);
+        await JSONWriter(this.deduplicatedPath, hashValue, 
+            [data,...Object.values(this.extractData),...this.deduplicated]);
     }
 }
 

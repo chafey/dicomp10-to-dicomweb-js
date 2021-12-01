@@ -65,7 +65,7 @@ which creates a full study directory.  The first stage writes to ~/dicomweb/inst
 
 There is currently no notification of what studies have been updated between stages.  The intent is to write notifications to ~/dicomweb/notifications/<studyUID> of what operations need to be applied/updated.
 
-### To Service Instances up
+### To Serve Instances As a Web Server
 ```
 cd ~/dicomweb
 npx http-server -p 5000 -g --cors
