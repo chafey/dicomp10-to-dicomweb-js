@@ -4,9 +4,19 @@ const getValueInlineString = (dataSet, attr) => {
     return [dataSet.string(attr.tag)]
 }
 
+const getStrings = (dataSet, attr) => {
+    return dataSet.string(attr.tag).split('\\');
+}
+
+const getValuePatientName = (dataSet, attr) => {
+    return getStrings(dataSet,attr).map(item => {Alphabetic: item});
+}
+
+/** Gets either InlineBinary or BulkDataURI, if already defined */
 const getValueInlineBinary = (dataSet, attr) => {
+    if( attr.BulkDataURI ) return { BulkDataURI: attr.BulkDataURI };
     const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
-    return binaryValue.toString('base64')
+    return { InlineBinary: binaryValue.toString('base64') };
 }
 
 const getValueInlineSignedShort = (dataSet, attr) => {
@@ -48,6 +58,16 @@ const getValueInlineFloat = (dataSet, attr) => {
         return [dataSet.float(attr.tag)]
     }
 }
+
+const getValueInlineIntString = (dataSet, attr) => {
+    return getStrings(dataSet,attr).map(val => parseInt(val));
+}
+
+
+const getValueInlineFloatString = (dataSet, attr) => {
+    return getStrings(dataSet,attr).map(val => parseFloat(val));
+}
+
 const getValueInlineFloatDouble = (dataSet, attr) => {
     if(attr.length > 8) {
         return getValueInlineBinary(dataSet, attr)
@@ -75,9 +95,10 @@ const getValueInline = (dataSet, attr, vr) => {
             return getValueInlineString(dataSet, attr)
         case 'AT': 
             return getValueInlineAttributeTag(dataSet, attr)
+        case 'DS':
+            return getValueInlineFloatString(dataSet,attr) 
         case 'CS': 
         case 'DA': 
-        case 'DS': 
         case 'DT': 
             return getValueInlineString(dataSet, attr)
         case 'FL':
@@ -85,6 +106,7 @@ const getValueInline = (dataSet, attr, vr) => {
         case 'FD':
             return getValueInlineFloatDouble(dataSet, attr)
         case 'IS': 
+            return getValueInlineIntString(dataSet,attr);
         case 'LO': 
         case 'LT': 
             return getValueInlineString(dataSet, attr)
@@ -93,6 +115,7 @@ const getValueInline = (dataSet, attr, vr) => {
         case 'OW':
             return getValueInlineBinary(dataSet, attr)
         case 'PN': 
+            return getValuePatientName(dataSet, attr);
         case 'SH': 
             return getValueInlineString(dataSet, attr)
         case 'SL':
@@ -116,10 +139,10 @@ const getValueInline = (dataSet, attr, vr) => {
     }
 }
 
-const getValue = (dataSet, attr, vr, getDataSet, callback, options) => {
+const getValue = async (dataSet, attr, vr, getDataSet, callback, options) => {
     if(attr.tag === 'x7fe00010') {
-        extractImageFrames(dataSet, attr, vr, callback, options)
-        return
+        const BulkDataURI = await extractImageFrames(dataSet, attr, vr, callback, options)
+        return {BulkDataURI};
     }
     if(attr.items) {
         // sequences

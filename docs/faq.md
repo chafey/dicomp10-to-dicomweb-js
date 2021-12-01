@@ -1,7 +1,7 @@
 # FAQ
 
 * Q: Why doesn't this library support creation of series and study metadata?
-* A: To keep the scope of this library minimal.  It is anticipated that this library will be integrated with higher level modules to generate series and study metadata
+* A: To keep the scope of this library minimal.  It is anticipated that this library will be integrated with higher level modules to generate series and study metadata.  In fact, this library may well be integrated into a single running environment doing multiple parts, but that is integration work.
 
 * Q: Why doesn't this library support STOW-RS or QIDO-RS?
 * A: To keep the scope of this library minimal.  It is anticipated that this library will be integrated with higher level modules to implement STOW-RS and QIDO-RS

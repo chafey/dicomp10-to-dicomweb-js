@@ -34,10 +34,12 @@ Included is an example cli that uses this library takes converts a DICOM P10 fil
 the DICOMweb URI pattern.  These files can be served up using a standard HTTP server and will be DICOMweb compliant
 
 Parameters:
-* <path to DICOM P10 file or directory of DICOM P10 files>
-* <path to store DICOMweb format>
-* --bulkDataMinSize <size of attributes to generate as bulk data>
-* --recursive - recursively scans directories for DICOM P10 files
+* -d <path to store DICOMweb format> (/dicomweb by default)
+* <paths to DICOM P10 file or directory of DICOM P10 files>
+* --privateBulkSize <size of private attributes to generate as bulk data, defaults to 64>
+* --publicBulkSize <size of public attributes to generate as bulk data, defaults to 128k+2>
+* --deduplicate  - use the deduplicate listener instead of the write instances listener
+* --instances    - use the instances lsitener as WELL as the deduplicate listener
 
 The cli will generate files in the output directory like this:
 
@@ -48,10 +50,11 @@ The cli will generate files in the output directory like this:
 <StudyInstanceUid>/series/<SeriesInstanceUid>/instances/<SOPInstanceUID>/info - info about the conversion - P10 header, gzip encoding, length strategy, etc
 ```
 
-Note - image frames and bulk data are wrapped with multi-part mime headers so they can be streamed directly using a simple HTTP server
+Note - image frames and bulk data are wrapped with multi-part mime headers so they can be streamed directly using a simple HTTP server.  References to bulkdata include the offset and length of the raw data within the multipart.
+Other listeners for different organizations of bulkdata may be added in the future.
 
 TODO
-* Add parameter to enable/disable multi-part mime wrapping?
+* Add alternate listeners to enable/disable multi-part mime wrapping?
 * Add parameter to enable gzip compression?
   * Would need to figure out how to remember this
 * Define extensibility mechanism (e.g. for custom data types)
