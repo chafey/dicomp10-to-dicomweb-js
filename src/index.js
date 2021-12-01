@@ -15,6 +15,7 @@ const JSONReader = require('./JSONReader')
 const {getArg,hasArg, getRemainingArgs, showHelp} = require('./../src/args');
 const path = require('path');
 const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
+const Stats = require('./stats');
 
 /**
  * Processes a set of DICOM files, where the starting point is a list of directory names or file instances.
@@ -31,6 +32,7 @@ const processFiles = async (files, callbacks, options) => {
             try {
                 const dicomp10stream = fs.createReadStream(file);
                 await dicomp10todicomweb(dicomp10stream, callbacks, options);
+                StudyStats.add('DICOM P10', 'Parse DICOM P10 file');
             } catch (e) {
                 console.error("Couldn't process", file, e);
             }
@@ -91,6 +93,11 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
     // resolve promise with statistics
     return {}
 }
+
+
+
+const OverallStats = new Stats('OverallStats', 'Overall statistics');
+const StudyStats = new Stats('StudyStats','Study Generation', OverallStats);
 
 /**
  * The mkdicomweb command first runs mkdicomwebinstances, writing out the deduplicated data, and then runs the
@@ -160,6 +167,7 @@ const main = async defaults => {
       await processFiles(files, callback, options);
     }
     await callback.completeStudy();
+    OverallStats.summarize('Completed Study Processing');
 }
 
 dicomp10todicomweb.main = main;

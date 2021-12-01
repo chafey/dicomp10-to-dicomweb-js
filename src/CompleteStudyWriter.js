@@ -2,6 +2,7 @@ const JSONWriter = require('./JSONWriter')
 const StudyData = require('./StudyData')
 const JSONReader = require('./JSONReader')
 const Tags = require('./Tags')
+const Stats = require('./stats')
 
 /**
  * CompleteStudyWriter takes the deduplicated data values, all loaded into the study parameter,
@@ -31,7 +32,7 @@ const CompleteStudyWriter = options => {
 
         if (!options.isStudyData) {
             delete this.studyData;
-            console.log('Study metadata not being generated for:', studyData.studyInstanceUid);
+            Stats.StudyStats.summarize();
             return;
         }
 
@@ -39,6 +40,8 @@ const CompleteStudyWriter = options => {
         if( !isDirtyMetadata ) {
             console.log('Study metadata', studyData.studyInstanceUid, 'has clean metadata, not writing');
             delete this.studyData;
+            Stats.StudyStats.summarize(
+                `Study metadata ${studyData.studyInstanceUid} has clean metadata, not writing`);
             return;
         }
 
@@ -56,8 +59,8 @@ const CompleteStudyWriter = options => {
             allStudies[studyIndex] = studyQuery;
         }
         JSONWriter(options.directoryName, "studies", allStudies);
-        console.log('Wrote study metadata/query files for', studyData.studyInstanceUid);
         delete this.studyData;
+        Stats.StudyStats.summarize(`Wrote study metadata/query files for ${studyData.studyInstanceUid}`);
     };
 
     /** 

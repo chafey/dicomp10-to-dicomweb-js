@@ -1,3 +1,7 @@
+const Stats = require("./stats");
+
+const BufferStats = new Stats('BufferStats', 'Buffer Statistics', Stats.StudyStats);
+
 const handler = {
   get: function (obj, key) {
     const ikey = parseInt(key);
@@ -79,7 +83,9 @@ const asyncIteratorToBuffer = async (readable) => {
   const chunks = []
   for await (let chunk of readable) {
     chunks.push(chunk)
+    BufferStats.add('Read Async', `Read async buffer ${chunks.length}`,1024);
   }
+  BufferStats.reset();
   return StreamingBuffer(chunks)
 }
 

@@ -43,8 +43,6 @@ const SeriesExtract = [
     Tags.BodyPartExamined,
     Tags.ProtocolName,
     Tags.RequestedProcedureDescription,
-    Tags.PatientPosition,
-    Tags.PatientOrientation,
 ];
 const SeriesQuery = [StudyInstanceUID, ...SeriesExtract];
 
@@ -93,6 +91,8 @@ const ImageExtract = [
     Tags.WindowCenter,
     Tags.WindowWidth,
     Tags.WindowCenterWidthExplanation,
+    Tags.PatientPosition,
+    Tags.PatientOrientation,
 ];
 
 const addHash = (data, type) => {
