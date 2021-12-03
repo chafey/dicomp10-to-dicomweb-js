@@ -1,7 +1,12 @@
+const JSONWriter = require('./JSONWriter');
 const TagLists = require('./TagLists');
 const Tags = require('./Tags');
-
-const extractors = { patient: TagLists.PatientQuery, study: TagLists.StudyQuery, series: TagLists.SeriesExtract };
+const extractors = { 
+    patient: TagLists.PatientQuery, 
+    study: TagLists.StudyQuery, 
+    series: TagLists.SeriesExtract,
+    image: TagLists.ImageExtract,
+ };
 
 /**
  * This is an instance listener - the way this one works is that it listens for instance metadata.
@@ -11,36 +16,48 @@ const extractors = { patient: TagLists.PatientQuery, study: TagLists.StudyQuery,
  */
 async function deduplicateSingleInstance(id, imageFrame) {
     if (!imageFrame) return;
-    const deduplicated = {...imageFrame};
-    const options = { remove: false, hash: true };
-
-    if( !this.extractors ) this.extractors = extractors;
-    for (const key of Object.keys(this.extractors)) {
-        const extracted = TagLists.extract(deduplicated, key, this.extractors[key], options);
-        const hashKey = extracted[Tags.DeduppedHash].Value[0];
-        this.bulkdata(id, key, extracted);
-        this.extractData[hashKey] = extracted;
+    const studyData = await this.completeStudy.getCurrentStudyData(this, id);
+    const seriesUID = imageFrame[Tags.SeriesInstanceUID];
+    const sopUID = imageFrame[Tags.SOPInstanceUID];
+    if( !sopUID ) {
+        console.warn("No sop instance UID in", imageFrame);
+        return;
     }
-    this.deduplicatedInstances.push(deduplicated);
+    if( studyData.sopExists(sopUID) ) {
+        // console.log('SOP Instance UID', sopUID.Value[0], 'already exists, skipping');
+        // TODO - allow replace as an option
+        return;
+    }
+    const deduplicated = { ...imageFrame };
+    
+    if (!this.extractors) this.extractors = extractors;
+    for (const key of Object.keys(this.extractors)) {
+        const extracted = TagLists.extract(deduplicated, key, this.extractors[key], TagLists.RemoveExtract);
+        const hashKey = extracted[Tags.DeduppedHash].Value[0];
+        await studyData.addExtracted(this, hashKey, extracted)
+    }
+
+    // Restore the series and SOP UIDs
+    deduplicated[Tags.SeriesInstanceUID] = seriesUID;
+    deduplicated[Tags.SOPInstanceUID] = sopUID;
+    TagLists.addHash(deduplicated,Tags.InstanceType);
+    
     return deduplicated;
 }
 
-async function InstanceDeduplicate(id, imageFrame) {
-    // Notify the existing listeners, if any
-    const { studyInstanceUid } = id;
-    if (this.instanceMetadata) await this.instanceMetadata(id, index, imageFrame);
-    if (this.studyInstanceUid && studyInstanceUid !== this.studyInstanceUid) {
-        await this.completeStudy();
+const InstanceDeduplicate = options =>
+    async function InstanceDeduplicate(id, imageFrame) {
+        // Notify the existing listeners, if any
+        if (options.isInstanceMetadata) {
+            await JSONWriter(id.sopInstanceRootPath, 'metadata', imageFrame);
+        }
+        if( !options.isDeduplicate && !options.isGroup ) {
+            return;
+        }
+        if (!this.deduplicateSingleInstance) this.deduplicateSingleInstance = deduplicateSingleInstance;
+        const deduppedInstance = await this.deduplicateSingleInstance(id, imageFrame);
+        if( !deduppedInstance ) return;
+        await this.deduplicated(id, deduppedInstance);
     }
-    if (!this.studyInstanceUid) {
-        this.deduplicatedInstances = [];
-        this.extractData = {};
-        this.id = id;
-        this.studyInstanceUid = studyInstanceUid;
-    }
-    if (!this.deduplicateSingleInstance) this.deduplicateSingleInstance = deduplicateSingleInstance;
-    const deduppedInstance = await this.deduplicateSingleInstance(id, imageFrame);
-    await this.deduplicated(id, deduppedInstance);
-}
 
 module.exports = InstanceDeduplicate;

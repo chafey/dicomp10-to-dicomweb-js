@@ -1,87 +1,89 @@
-const TagLists = require('./TagLists');
-const JSONWriter = require('./JSONWriter');
-const path = require('path');
-const Tags = require('./Tags');
-const { studyInstanceUid } = require('./DeduplicateWriter');
+const JSONWriter = require('./JSONWriter')
+const StudyData = require('./StudyData')
+const JSONReader = require('./JSONReader')
+const Tags = require('./Tags')
+const Stats = require('./stats')
 
 /**
  * CompleteStudyWriter takes the deduplicated data values, all loaded into the study parameter,
- * and writes it out as study, series and instance queries, as well as series level metadata.
+ * and writes it out as various dataset types.  The options parameters define what types it gets
+ * written out as.
+ * The studyData object is then removed, so that a new one can be created if required.
  */
-async function CompleteStudyWriter() {
-    if( !this.id ) return;
-    const {studyPath} = this.id;
-    const anInstance = recombine(this,0);
-    console.log('Writing complete study data to', studyPath);
-    
-    const series = {};
-    for(let i=0; i<this.deduplicatedInstances.length; i++) {
-        const seriesInstance = recombine(this,i);
-        const seriesInstanceUid = getSeriesInstanceUid(seriesInstance);
-        if( !seriesInstanceUid ) {
-            console.log('Cant get seriesUid from',Tags.SeriesInstanceUID, seriesInstance );
-            continue;
+const CompleteStudyWriter = options => {
+    const ret = async function () {
+        const { studyData } = this;
+        if (!studyData) return;
+        
+        if (!studyData.numberOfInstances) {
+            console.log('studyData.deduplicated is empty');
+            delete this.studyData;
+            return;
         }
-        if( !series[seriesInstanceUid] ) {
-            const seriesQuery = TagLists.extract(seriesInstance, 'series', TagLists.SeriesQuery);
-            const seriesPath = path.join(studyPath, 'series', seriesInstanceUid);
-            series[seriesInstanceUid] = {
-                seriesPath,
-                seriesQuery,
-                instances: [],
-            };
+
+        if (options.isGroup) {
+            if (studyData.dirty) {
+                await studyData.writeDeduplicatedGroup();
+                console.log('Wrote updated deduplicated data for study', studyData.studyInstanceUid);
+            } else {
+                console.log('Not writing new deduplicated data because it is clean:', studyData.studyInstanceUid);
+            }
         }
-        series[seriesInstanceUid].instances.push(seriesInstance);
-        // TODO - add instanceQuery path too
+
+        if (!options.isStudyData) {
+            delete this.studyData;
+            Stats.StudyStats.summarize();
+            return;
+        }
+
+        const isDirtyMetadata = await studyData.dirtyMetadata();
+        if( !isDirtyMetadata ) {
+            console.log('Study metadata', studyData.studyInstanceUid, 'has clean metadata, not writing');
+            delete this.studyData;
+            Stats.StudyStats.summarize(
+                `Study metadata ${studyData.studyInstanceUid} has clean metadata, not writing`);
+            return;
+        }
+
+        const studyQuery = await studyData.writeMetadata();
+
+        const allStudies = await JSONReader(options.directoryName, "studies.gz", []);
+        if (!studyQuery[Tags.StudyInstanceUID]) {
+            console.error('studyQuery=', studyQuery, anInstance);
+        }
+        const studyUID = studyQuery[Tags.StudyInstanceUID].Value[0];
+        const studyIndex = allStudies.findIndex(item => item[Tags.StudyInstanceUID].Value[0] == studyUID);
+        if (studyIndex == -1) {
+            allStudies.push(studyQuery);
+        } else {
+            allStudies[studyIndex] = studyQuery;
+        }
+        JSONWriter(options.directoryName, "studies", allStudies);
+        delete this.studyData;
+        Stats.StudyStats.summarize(`Wrote study metadata/query files for ${studyData.studyInstanceUid}`);
+    };
+
+    /** 
+     * Gets a current study data object, or completes the old one and generates a new one.
+     * async call as it may need to store the current study data value.
+     */
+    ret.getCurrentStudyData = async (callback, id) => {
+        let { studyData } = callback;
+        const { studyInstanceUid } = id;
+
+        if (studyData) {
+            if (studyData.studyInstanceUid == studyInstanceUid) {
+                return studyData;
+            } else {
+                await callback.completeStudy(studyData);
+            }
+        }
+        callback.studyData = new StudyData(id, options);
+        await callback.studyData.init(options);
+        return callback.studyData;
     }
 
-    const seriesList = [];
-    const modalitiesInStudy = [];
-    let numberOfInstances = 0;
-    let numberOfSeries = 0;
-    for(const seriesUid of Object.keys(series) ) {
-        const singleSeries = series[seriesUid];
-        const {seriesQuery,seriesPath, instances} = singleSeries;
-        seriesQuery[Tags.NumberOfSeriesRelatedInstances] = {vr:'IS', Value: [instances.length]};
-        numberOfInstances += instances.length;
-        numberOfSeries++;
-        seriesList.push(seriesQuery);
-        const modality = seriesQuery[Tags.Modality].Value[0];
-        if( modalitiesInStudy.indexOf(modality)==-1 ) modalitiesInStudy.push(modality);
-        await JSONWriter(seriesPath, 'metadata',instances);
-        await JSONWriter(seriesPath, 'series', [seriesQuery]);
-    }
-
-    await JSONWriter(studyPath,'series',seriesList);
-
-    const studyQuery = TagLists.extract(anInstance,'study', TagLists.PatientStudyQuery);
-    studyQuery[Tags.ModalitiesInStudy] = {Value: modalitiesInStudy, vr: 'CS'};
-    studyQuery[Tags.NumberOfStudyRelatedInstances] = {Value: [numberOfInstances], vr: 'IS'};
-    studyQuery[Tags.NumberOfStudyRelatedSeries] = {Value: [numberOfSeries], vr: 'IS'};
-    await JSONWriter(studyPath,'studies',[studyQuery]);
-
-    if( !this.allStudies ) this.allStudies = [];
-    const studyUID = studyQuery[Tags.StudyInstanceUID].Value[0];
-    const studyIndex = this.allStudies.findIndex(item=> item[Tags.StudyInstanceUID].Value[0]==studyUID);
-    if( studyIndex==-1 ) {
-        this.allStudies.push(studyQuery);    
-    } else {
-        this.allStudies[studyIndex] = studyQuery;
-    }
-    this.allStudies[studyIndex] = studyQuery;
-    delete this.deduplicatedInstances;
-    delete this.extractData;
-    delete this.id;
-};
-
-const getSeriesInstanceUid = (seriesInstance) => seriesInstance[Tags.SeriesInstanceUID] && seriesInstance[Tags.SeriesInstanceUID].Value[0];
-
-/** Create a full study instance data from a partial one
- * TODO - implement this fully, for now it is just partial.
- */
-const recombine = (study,index) => {
-    // TODO - generate this from a combination of extracted data later
-    return study.deduplicatedInstances[index];
+    return ret;
 }
 
 module.exports = CompleteStudyWriter;

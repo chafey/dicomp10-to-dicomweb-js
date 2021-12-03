@@ -1,3 +1,7 @@
+const Stats = require("./stats");
+
+const BufferStats = new Stats('BufferStats', 'Buffer Statistics', Stats.StudyStats);
+
 const handler = {
   get: function (obj, key) {
     const ikey = parseInt(key);
@@ -12,7 +16,6 @@ const handler = {
   },
 
   length: obj => obj.combinedLength,
-
 };
 
 const StreamingFunctions = {
@@ -55,10 +58,14 @@ const StreamingFunctions = {
       const chunk = this.findChunk(start + i);
       const chunkI = start + i - chunk.start
       const useLen = Math.min(buflen,chunk.length-chunkI)
-      chunk.copy(ret,i,chunkI,useLen);
+      chunk.copy(ret,i,chunkI,chunkI+useLen);
       i += useLen;
     }
     return ret;
+  },
+
+  hexSlice: function(start,end) {
+    return this.slice(start,end).hexSlice();
   },
 
   _keys: { then: true, lastChunk: true, slice: true, findChunk: true, chunks: true, index_get: true },
@@ -76,7 +83,9 @@ const asyncIteratorToBuffer = async (readable) => {
   const chunks = []
   for await (let chunk of readable) {
     chunks.push(chunk)
+    BufferStats.add('Read Async', `Read async buffer ${chunks.length}`,1024);
   }
+  BufferStats.reset();
   return StreamingBuffer(chunks)
 }
 

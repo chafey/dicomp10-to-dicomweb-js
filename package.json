@@ -1,6 +1,6 @@
 {
   "name": "dicomp10-to-dicomweb",
-  "version": "0.1.2",
+  "version": "0.3.0",
   "description": "Library to convert DICOMP10 to DICOMweb format",
   "main": "src/index.js",
   "directories": {
@@ -8,7 +8,11 @@
   },
   "bin": {
     "mkdicomweb": "bin/mkdicomweb.js",
-    "mkdicomwebinstances": "bin/mkdicomwebinstances.js"
+    "mkdicomwebdeduplicated": "bin/mkdicomwebdeduplicated.js",
+    "mkdicomwebdeduplicatedgroup": "bin/mkdicomwebdeduplicatedgroup.js",
+    "mkdicomwebinstances": "bin/mkdicomwebinstances.js",
+    "mkdicomwebstudy": "bin/mkdicomwebstudy.js",
+    "staticwadojs": "bin/mkdicomweb.js"
   },
   "scripts": {
     "test": "mocha --recursive --trace-warnings --unhandled-rejections=strict"
@@ -21,7 +25,10 @@
     "DICOM",
     "DICOMweb"
   ],
-  "author": ["Chris Hafey <chafey@gmail.com>","Bill Wallace <bill.wallace@radicalimaging.com>"],
+  "author": [
+    "Chris Hafey <chafey@gmail.com>",
+    "Bill Wallace <bill.wallace@radicalimaging.com>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/chafey/dicomp10-to-dicomweb-js/issues"
@@ -33,6 +40,7 @@
   "dependencies": {
     "dicom-parser": "^1.8.11",
     "hash-object": "^0.1.7",
+    "node-object-hash": "^2.3.10",
     "object-hash": "^2.2.0"
   }
 }

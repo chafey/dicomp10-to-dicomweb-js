@@ -1,11 +1,11 @@
 # FAQ
 
-* Q: Why doesn't this library support creation of series and study metadata?
-* A: To keep the scope of this library minimal.  It is anticipated that this library will be integrated with higher level modules to generate series and study metadata.  In fact, this library may well be integrated into a single running environment doing multiple parts, but that is integration work.
-
 * Q: Why doesn't this library support STOW-RS or QIDO-RS?
-* A: To keep the scope of this library minimal.  It is anticipated that this library will be integrated with higher level modules to implement STOW-RS and QIDO-RS
+* A: This library is centered around the creation of DICOMweb data from DICOM part 10.  As such, it provides all the building blocks for implementing a STOW-RS or QIDO-RS version, but isn't a DICOMweb service itself.
 
 * Q: Why does this library support NodeJS and not browsers?
-* A: It is expected that this library would be primarily used on the server side.  Browserify can be used for browser based applications
+* A: It is expected that this library would be primarily used on the server side.  Some of the libraries dependent on the node performance, for example, hashing is fast using node-object-hash, which relies on nodejs functionality.
+
+* Q: How can I get the original transfer syntax UID?
+* A: The original transfer syntax UID can be retrieved from the AvailableTransferSyntaxUID, which is stored in the instances query as well as in the series level metadata.
 

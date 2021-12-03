@@ -5,11 +5,13 @@ const getValueInlineString = (dataSet, attr) => {
 }
 
 const getStrings = (dataSet, attr) => {
-    return dataSet.string(attr.tag).split('\\');
+    const ret = dataSet.string(attr.tag);
+    return ret && ret.split(/\\/) || undefined;
 }
 
 const getValuePatientName = (dataSet, attr) => {
-    return getStrings(dataSet,attr).map(item => {Alphabetic: item});
+    const strings = getStrings(dataSet,attr);
+    return strings && strings.map(item => ({Alphabetic: item})) || undefined;
 }
 
 /** Gets either InlineBinary or BulkDataURI, if already defined */
@@ -139,6 +141,20 @@ const getValueInline = (dataSet, attr, vr) => {
     }
 }
 
+const isPrivate = attr => {
+    const tag = attr.tag;
+    const ch = tag.substr(4,1);
+    const chHex = parseInt(ch,16);
+    return chHex % 2 == 1; 
+}
+
+const isValueInline = (attr, options) => {
+    if( isPrivate(attr) ) {
+        return attr.length <= options.maximumInlinePrivateLength
+    }
+    return attr.length <= options.maximumInlinePublicLength
+}
+
 const getValue = async (dataSet, attr, vr, getDataSet, callback, options) => {
     if(attr.tag === 'x7fe00010') {
         const BulkDataURI = await extractImageFrames(dataSet, attr, vr, callback, options)
@@ -146,18 +162,20 @@ const getValue = async (dataSet, attr, vr, getDataSet, callback, options) => {
     }
     if(attr.items) {
         // sequences
-        return attr.items.map((item) => {
-            const result = getDataSet(item.dataSet, callback, options)
-            return result.metadata
-        })
+        const result = [];
+        for(const item of attr.items) {
+            const subResult = await getDataSet(item.dataSet, callback, options)
+            if( subResult.metadata ) result.push(subResult.metadata);
+        }
+        return result
     } else {
         // non sequence item
-        if(attr.length <= options.maximumInlineDataLength) {
+        if(isValueInline(attr,options) ) {
             return getValueInline(dataSet, attr, vr)
         } else {
             const binaryValue = dataSet.byteArray.slice(attr.dataOffset, attr.dataOffset + attr.length)
-            callback.bulkdata(binaryValue)
-            // TODO: add bulkdata ref to metadata
+            const BulkDataURI = await callback.bulkdata(binaryValue)
+            return {BulkDataURI};
         }
     }
 }
