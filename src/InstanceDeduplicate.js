@@ -45,9 +45,31 @@ async function deduplicateSingleInstance(id, imageFrame) {
     return deduplicated;
 }
 
+
+/** Canonicalize the JSON data, making Values always arrays, remote "undefined" from the tags etc */
+const canonicalize = json => {
+    if( !json ) return;
+    if( Array.isArray(json) ) {
+        return json.map(canonicalize);
+    }
+    Object.keys(json).forEach(tag => {
+        if( !tag || tag==='undefined' ) {
+            // console.error('Got an undefined tag:', tag, typeof(tag));
+            return;
+        }
+        const val = json[tag];
+        const { Value } = val || {};
+        if( Value && !Array.isArray(Value)) {
+            val.Value = [Value];
+        }
+    });
+    return json;
+} 
+
 const InstanceDeduplicate = options =>
     async function InstanceDeduplicate(id, imageFrame) {
         // Notify the existing listeners, if any
+        imageFrame = canonicalize(imageFrame);
         if (options.isInstanceMetadata) {
             await JSONWriter(id.sopInstanceRootPath, 'metadata', imageFrame);
         }

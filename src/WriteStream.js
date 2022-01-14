@@ -30,7 +30,6 @@ const WriteStream = (dir,name,options={}) => {
         writeStream = zlib.createGzip();
         writeStream.pipe(rawStream);
         writeStream.on('close', () => {
-            console.log('close gzip, closing raw');
             rawStream.close();
         });
     }
@@ -39,7 +38,6 @@ const WriteStream = (dir,name,options={}) => {
         await this.writeStream.end();
         await this.closePromise;
         writeCount++;
-        if( writeCount % 1000 == 0 ) console.log("Wrote", finalName);
         await fs.rename(tempName,finalName, () => true ); // console.log('Renamed', tempName,finalName));
     }
 
