@@ -292,7 +292,7 @@ class StudyData {
             seriesList.push(seriesQuery);
             const modality = seriesQuery[Tags.Modality].Value[0];
             if (modalitiesInStudy.indexOf(modality) == -1) modalitiesInStudy.push(modality);
-            await JSONWriter(seriesPath, 'metadata', instances);
+            await JSONWriter(seriesPath, 'metadata', instances, {gzip:true,index:false});
             await JSONWriter(seriesPath, 'series', [seriesQuery]);
             await JSONWriter(seriesPath, 'instances', instancesQuery)
         }

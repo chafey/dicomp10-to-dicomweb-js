@@ -9,7 +9,7 @@ const TagLists = require('./TagLists');
 
 const writeDeduplicatedFile = async (dir, data, hashValue) => {
     if( !hashValue ) hashValue = hasher.hash(data);
-    await JSONWriter(dir, hashValue, data);
+    await JSONWriter(dir, hashValue, data, {gzip:true });
     return hashValue;
 }
 

@@ -47,7 +47,7 @@ const CompleteStudyWriter = options => {
 
         const studyQuery = await studyData.writeMetadata();
 
-        const allStudies = await JSONReader(options.directoryName, "studies.gz", []);
+        const allStudies = await JSONReader(options.directoryName, "studies/index.json.gz", []);
         if (!studyQuery[Tags.StudyInstanceUID]) {
             console.error('studyQuery=', studyQuery, anInstance);
         }
