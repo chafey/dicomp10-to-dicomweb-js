@@ -14,7 +14,8 @@ const HashDataWriter = require('./HashDataWriter')
 const JSONReader = require('./JSONReader')
 const {getArg,hasArg, getRemainingArgs, showHelp} = require('./../src/args');
 const path = require('path');
-const dicomwebDefaultDir = path.join(require('os').homedir(), 'dicomweb');
+const homedir = require('os').homedir();
+const dicomwebDefaultDir = '~/dicomweb';
 const Stats = require('./stats');
 
 /**
@@ -99,13 +100,15 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
 const OverallStats = new Stats('OverallStats', 'Overall statistics');
 const StudyStats = new Stats('StudyStats','Study Generation', OverallStats);
 
+const handleHomeRelative = dirName => dirName[0]=='~' ? (path.join(homedir,dirName.substring(1))) : dirName;
+
 /**
  * The mkdicomweb command first runs mkdicomwebinstances, writing out the deduplicated data, and then runs the
  * mkdicomwebstudy command, creating the deduplicated data set.  This version, however, keeps the deduplicated
  * data in memory by default on a study level, which avoids needing to run the load process.
  */
 const main = async defaults => {
-    const directoryName = getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)')
+    const directoryName = handleHomeRelative(getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)'))
     const isDeduplicate = hasArg('-e', '--deduplicate', defaults.isDeduplicate, 'Write deduplicate instance level data')
     const isStudyData = hasArg('-s', '--study', defaults.isStudyData, 'Write study metadata - on provided instances only (TO FIX)')
     const isGroup = hasArg('-g', '--group', defaults.isGroup, 'Write combined deduplicate data')
