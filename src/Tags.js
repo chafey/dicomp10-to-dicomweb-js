@@ -5,8 +5,10 @@ const Tags = {
     RawMinTag: 'x00000000',
     RawFirstBodyTag: 'x00080000',
     RawTransferSyntaxUID: 'x00020010',
-
-
+    
+    // This one isn't defined in the dataDictionary
+    AvailableTransferSyntaxUID: '00083002',
+    
     // TODO - make this actually work as a real deduplicated object with different creators/lookups.
     DeduppedCreator: "dedupped",
     // Creator tag value

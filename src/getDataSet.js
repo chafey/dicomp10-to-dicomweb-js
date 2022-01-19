@@ -28,6 +28,7 @@ const getDataSet = async (dataSet, callback, options) => {
 
     // iterate over dataSet attributes in order
     for (const tag in dataSet.elements) {
+        // Raw versions have the x in front of them
         if( tag!=Tags.RawTransferSyntaxUID && tag >= Tags.RawMinTag && tag < Tags.RawFirstBodyTag ) {
             continue;
         }
@@ -35,6 +36,7 @@ const getDataSet = async (dataSet, callback, options) => {
         await attributeToJS(metadata, tag, dataSet, attr, callback, options)
     }
     if( metadata[Tags.TransferSyntaxUID] ) {
+        // console.log(`Found tsuid ${metadata[Tags.TransferSyntaxUID]} assigning to ${Tags.AvailableTransferSyntaxUID}`)
         metadata[Tags.AvailableTransferSyntaxUID] = metadata[Tags.TransferSyntaxUID];
         delete metadata[Tags.TransferSyntaxUID];
     }
