@@ -12,6 +12,7 @@
     "mkdicomwebdeduplicatedgroup": "bin/mkdicomwebdeduplicatedgroup.js",
     "mkdicomwebinstances": "bin/mkdicomwebinstances.js",
     "mkdicomwebstudy": "bin/mkdicomwebstudy.js",
+    "dicomwebscp": "bin/dicomwebscp.js",
     "staticwadojs": "bin/mkdicomweb.js"
   },
   "scripts": {
@@ -38,6 +39,7 @@
     "mocha": "^9.1.3"
   },
   "dependencies": {
+    "dcmjs-dimse": "^0.0.14",
     "dicom-parser": "^1.8.11",
     "hash-object": "^0.1.7",
     "node-object-hash": "^2.3.10",
