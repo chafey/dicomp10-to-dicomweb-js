@@ -17,7 +17,7 @@ const path = require('path');
 const homedir = require('os').homedir();
 const dicomwebDefaultDir = '~/dicomweb';
 const Stats = require('./stats');
-const {CreateVideoWriter} = require('./video')
+const VideoWriter = require('./VideoWriter')
 
 /**
  * Processes a set of DICOM files, where the starting point is a list of directory names or file instances.
@@ -85,8 +85,8 @@ const dicomp10todicomweb = async (dicomp10stream, callback, options) => {
             await callback.bulkdata(id, bulkDataIndex++, bulkData),
         imageFrame: async (imageFrame) =>
             await callback.imageFrame(id, imageFrameIndex++, imageFrame),
-        pixeldata: async (dataSet) =>
-            await callback.pixeldata(id,dataSet),
+        videoWriter: async (dataSet) =>
+            await callback.videoWriter(id,dataSet),
     }
 
     // convert to DICOMweb MetaData and BulkData
@@ -160,7 +160,7 @@ const main = async defaults => {
         uids: IdCreator(options),
         bulkdata: HashDataWriter(options),
         imageFrame: ImageFrameWriter(options),
-        pixeldata: CreateVideoWriter(options),
+        videoWriter: VideoWriter(options),
         completeStudy: CompleteStudyWriter(options),
         metadata: InstanceDeduplicate(options),
         deduplicated: DeduplicateWriter(options),

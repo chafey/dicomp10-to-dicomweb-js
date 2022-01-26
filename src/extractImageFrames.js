@@ -1,7 +1,7 @@
 const getNumberOfFrames = require('./getNumberOfFrames')
 const getUncompressedImageFrame = require('./getUncompressedImageFrame')
 const getEncapsulatedImageFrame = require('./getEncapsulatedImageFrame')
-const {isVideo} = require('./video')
+const {isVideo} = require('./VideoWriter')
 
 const areFramesAreFragmented = (attr, numberOfFrames) => {
     return attr.encapsulatedPixelData && numberOfFrames != attr.fragments.length
@@ -23,7 +23,8 @@ const extractImageFrames = async (dataSet, attr, vr, callback, options) => {
 
     const videoType = isVideo(dataSet);
     if( videoType ) {
-        return await callback.pixeldata(dataSet);
+        // The top level function is asynchronous, so this one doesn't need an additional await
+        return callback.videoWriter(dataSet);
     }
     
     let BulkDataURI;

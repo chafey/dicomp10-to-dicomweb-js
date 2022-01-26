@@ -21,46 +21,35 @@ const VIDEO_TYPES = {
     // TODO - add the new multi-segment MPEG2 and H264 variants
 }
 
-const isVideo = dataSet => {
-    const tsuid = dataSet.string(Tags.RawTransferSyntaxUID);
-    const type = VIDEO_TYPES[tsuid];
-    return type;
-};
+const isVideo = dataSet => VIDEO_TYPES[dataSet.string(Tags.RawTransferSyntaxUID)];
 
-const getFragment = (frameIndex, dataSet) => {
-    try {
-        return dicomParser.readEncapsulatedPixelDataFromFragments(
-            dataSet,
-            dataSet.elements.x7fe00010,
-            frameIndex
-        );
-    } catch (e) {
-        return null;
-    }
-}
-
-const CreateVideoWriter = options => {
+const VideoWriter = options => {
     const writeVideo = async (id, dataSet) => {
         console.log(`Writing video  ${id.sopInstanceUid}`);
         const extension = VIDEO_TYPES[dataSet.string(Tags.RawTransferSyntaxUID)];
         const filename = `pixeldata.${extension}`;
         const writeStream = WriteStream(id.sopInstanceRootPath, filename, { mkdir: true });
         let length = 0;
-        for (let i = 0; true; i++) {
-            const blob = getFragment(i, dataSet);
-            if (!blob) {
-                await writeStream.close();
-                // console.log(`Done video ${id.sopInstanceRootPath}\\${filename} of length ${length}`);
-                return `series/${id.seriesInstanceUid}/instances/${id.sopInstanceUid}/pixeldata.${extension}?length=${length}&offset=0`;
-            }
+        const { fragments } = dataSet.elements.x7fe00010;
+
+        if( !fragments ) {
+            console.warn('No video data');
+            return;
+        }
+        // The zero position fragment isn't available, even though present in the original data
+        for (let i = 0; i<fragments.length; i++) {
+            const fragment = fragments[i];
+            const blob = dataSet.byteArray.slice(fragment.position, fragment.position+fragment.length)
             length += blob.length;
             await writeStream.write(blob);
         }
+        await writeStream.close();
+        console.log(`Done video ${id.sopInstanceRootPath}\\${filename} of length ${length}`);
+        return `series/${id.seriesInstanceUid}/instances/${id.sopInstanceUid}/pixeldata.${extension}?length=${length}&offset=0`;
     }
     return writeVideo;
 };
 
 
-module.exports = {
-    isVideo, CreateVideoWriter,
-}
+module.exports = VideoWriter;
+VideoWriter.isVideo = isVideo;
