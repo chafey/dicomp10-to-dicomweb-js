@@ -1,10 +1,12 @@
 const getNumberOfFrames = require('./getNumberOfFrames')
 const getUncompressedImageFrame = require('./getUncompressedImageFrame')
 const getEncapsulatedImageFrame = require('./getEncapsulatedImageFrame')
- 
+const {isVideo} = require('./VideoWriter')
+
 const areFramesAreFragmented = (attr, numberOfFrames) => {
     return attr.encapsulatedPixelData && numberOfFrames != attr.fragments.length
 }
+
 
 const getFrameSize = (dataSet) => {
     const rows = dataSet.uint16('x00280010')
@@ -19,14 +21,21 @@ const extractImageFrames = async (dataSet, attr, vr, callback, options) => {
     const framesAreFragmented = areFramesAreFragmented(attr, numberOfFrames)
     const uncompressedFrameSize = getFrameSize(dataSet)
 
+    const videoType = isVideo(dataSet);
+    if( videoType ) {
+        // The top level function is asynchronous, so this one doesn't need an additional await
+        return callback.videoWriter(dataSet);
+    }
+    
     let BulkDataURI;
+
     for(let frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
         if(attr.encapsulatedPixelData) {
-            const compressedImageFrame = getEncapsulatedImageFrame(dataSet, attr, frameIndex, framesAreFragmented)
-            BulkDataURI = await callback.imageFrame(compressedImageFrame, {dataSet})
+            const compressedFrame = getEncapsulatedImageFrame(dataSet, attr, frameIndex, framesAreFragmented)
+            BulkDataURI = await callback.imageFrame(compressedFrame, {dataSet})
         } else {
-            const imageFrame = getUncompressedImageFrame(dataSet, attr, frameIndex, uncompressedFrameSize)
-            BulkDataURI = await callback.imageFrame(imageFrame, {dataSet})
+            const uncompressedFrame = getUncompressedImageFrame(dataSet, attr, frameIndex, uncompressedFrameSize)
+            BulkDataURI = await callback.imageFrame(uncompressedFrame, {dataSet})
         }
     }
     return BulkDataURI
