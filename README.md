@@ -42,22 +42,92 @@ A visual studio code build task is also included so you can run it from there wi
 ## Running the CLI
 Install the CLI with either npm install -g .  or npm install -g dicomp10-to-dicomweb
 
+### Api
+There are 5 different commands: mkdicomweb, mkdicomwebinstances, mkdicomwebstudy, mkdicomwebdeduplicated, mkdicomwebdeduplicatedgroup that can be used (see usage bellow). It can be run as:
+
+```
+commnadName [options]
+```
+The options are:
+
+  -c, --clean
+  : Clean the study output directory for these instances (default: false)
+  
+  -C, --remove-deduplicated-instances
+  : Remove single instance deduplicated files after writing group files (default: false)
+  
+  -d, --deduplicate
+  : Write deduplicate instance level data (default: false)
+  
+  -g, --group 
+  : Write combined deduplicate data (default: true)
+  
+  -h, --help
+  : Print help (default: false)
+  
+  -i, --input <input...>
+  : List of files/directories/studyUids to be processed (default: [])
+  Required for commands: **mkdicomweb**, **mkdicomwebdeduplicated**, **mkdicomwebinstances**
+  
+  -I, --instances
+  : Write instance metadata (default: false)
+  
+  -m, --maximum-inline-public-length <value>
+  : Maximum length of public binary data (default: 131074)
+  
+  -M, --maximum-inline-private-length <value>
+  : Maximum length of private binary data (default: 64)
+  
+  --no-recompress
+  : Force no recompression
+  [see](#to-recompress)
+  
+  -o, --dir <value>
+  : Set output directory (default: "~/dicomweb")
+  
+  --path-deduplicated <path>
+  : Set the deduplicate data directory path (relative to dir) (default: "deduplicated")
+  
+  --path-instances <path>
+  : Set the instances directory path (relative to dir) (default: "instances")
+  
+  -r, --recompress <listvalue...> 
+  : List of types to recompress separated by comma (choices: "uncompressed", "jp2", "jpeglossless", "rle", default: "uncompressed jp2")
+  [see](#to-recompress)
+  
+  -s, --study
+  : Write study metadata - on provided instances only (TO FIX}, (default: true)
+  
+  -t, --content-type <type>
+  : Content type (default: null)
+  
+  -T, --colour-content-type <value>
+  : Colour content type (default: null)
+  
+  -v, --verbose
+  : Write verbose output (default: false)
+  
+  -V, --version
+  : output the version number
+
+
+
 ### To create instances
 Run the tool:
 ```
-mkdicomwebinstances <directoryOfP10Files>
+mkdicomwebinstances -i <directoryOfP10Files>
 ```
 
 ### To create a full DICOMweb output structure
 Run the tool:
 ```
-mkdicomweb <directoryOfP10Files>
+mkdicomweb -i <directoryOfP10Files>
 ```
 
 ### To run separated stages
 The mkdicomweb tool runs the three stages all together, on just the studies references.  This can instead be done on separate files by running:
 ```
-mkdicomwebdeduplicated <directoryOfP10Files>
+mkdicomwebdeduplicated -i <directoryOfP10Files>
 mkdicomwebdeduplicatedgroup
 mkdicomwebstudy
 ```
@@ -81,11 +151,57 @@ Run the tool mkdicomwebpart10 on the studyUID, and optionally on the series/inst
 ### To Update DICOM Metadata
 TODO
 
-Run the tool 
+Run the tool
 ```
 mkdicomwebupdate -<delete/anonymize/patient/study/series/instance> <studyInstanceUID> (tag=newValue)* 
 ```
 to delete the given item or to update the specified attribute contained in the given level.  Multiple mkdicomwebupdate commands may be run to perform updates on different attribute sets, or they may be grouped into a single file for bulk application.
+
+### To recompress
+It allows commands to recompress data/metadata prior writing it to local. Currently, if recompress is activate the designed data types will be transcoded [see](#recompress-aliases-and-input-transfer-syntaxes).
+
+By default the recompression occurs for incoming types: uncompressed, jp2
+```
+mkdicomweb -i ./folderName
+```
+It will recompress any existing data that transfers syntaxes are 1.2.840.10008.1.2.4.90, 1.2.840.10008.1.2.4.91, 1.2.840.10008.1.2, 1.2.840.10008.1.2.1 and 1.2.840.10008.1.2.2.
+
+
+Define incoming types for recompression of: uncompressed,jp2,rle
+```
+mkdicomweb -i ./folderName -r uncompressed jp2 rle
+```
+It will recompress any existing data that transfers syntaxes: 1.2.840.10008.1.2.4.90, 1.2.840.10008.1.2.4.91, 1.2.840.10008.1.2, 1.2.840.10008.1.2.1, 1.2.840.10008.1.2.2 and 1.2.840.10008.1.2.5 to transfer syntax 1.2.840.10008.1.2.4.80.
+
+Force no recompression
+```
+mkdicomweb -i ./folderName -r uncompressed jp2 rle --no-recompress
+```
+It will NOT recompress any existing data but instead it will keep them in the original encoding.
+
+Force no recompression
+```
+mkdicomweb -i ./folderName --no-recompress
+```
+It will NOT recompress any existing data but instead it will keep them in the original encoding.
+
+Obs: --no-recompress forces no compression at all. Use it if you want to disable even the default behavior.
+
+
+### Recompress aliases and input transfer syntaxes
+The table below shows the support for transfer syntax recompression(i.e use "... -r jp2" if you want to recompress from 1.2.840.10008.1.2.4.90 to 1.2.840.10008.1.2.4.80)
+
+| TransferSyntaxUID      	| Name                                                    	| Recompress alias 	|  Target TransferSyntaxUID |
+|------------------------	|---------------------------------------------------------	|------------------	|--------------------------	|
+| 1.2.840.10008.1.2      	| Implicit VR Endian                                      	| uncompressed     	| 1.2.840.10008.1.2         |
+| 1.2.840.10008.1.2.1    	| Explicit VR Little Endian                               	| uncompressed     	| 1.2.840.10008.1.2.1       |
+| 1.2.840.10008.1.2.2    	| Explicit VR Big Endian                                  	| uncompressed     	| 1.2.840.10008.1.2.1       |
+| 1.2.840.10008.1.2.4.57 	| JPEG Lossless, Nonhierarchical (Processes 14)           	| jpeglossless     	| 1.2.840.10008.1.2.4.80    |
+| 1.2.840.10008.1.2.4.70 	| JPEG Lossless, Nonhierarchical, First- Order Prediction 	| jpeglossless     	| 1.2.840.10008.1.2.4.80    |
+| 1.2.840.10008.1.2.4.90 	| JPEG 2000 Image Compression (Lossless Only)             	| jp2              	| 1.2.840.10008.1.2.4.80    |
+| 1.2.840.10008.1.2.4.91 	| JPEG 2000 Image Compression                             	| jp2              	| 1.2.840.10008.1.2.4.80    |
+| 1.2.840.10008.1.2.5    	| RLE Lossless                                            	| rle              	| 1.2.840.10008.1.2.4.80    |
+
 
 ## TODO (Looking for help here!!)
 

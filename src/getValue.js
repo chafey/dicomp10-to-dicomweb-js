@@ -155,8 +155,22 @@ const isValueInline = (attr, options) => {
     return attr.length <= options.maximumInlinePublicLength
 }
 
-const getValue = async (dataSet, attr, vr, getDataSet, callback, options) => {
-    if(attr.tag === 'x7fe00010') {
+/**
+ * Get data value for the given attr.
+ * Attr can be a pixelData tag, sequence items, inline or bulkdata
+ * 
+ * @param {*} dataSet 
+ * @param {*} attr 
+ * @param {*} vr 
+ * @param {*} getDataSet 
+ * @param {*} callback 
+ * @param {*} options object containing program properties.
+ * @param {*} parentAttr attr's parent. If not present means attr is at root level.
+ * @returns 
+ */
+const getValue = async (dataSet, attr, vr, getDataSet, callback, options, parentAttr) => {
+    // It will only process pixelData tag if on metadata root. Otherwise it will be skiped.
+    if(attr.tag === 'x7fe00010' && !parentAttr) {
         const BulkDataURI = await extractImageFrames(dataSet, attr, vr, callback, options)
         return {BulkDataURI};
     }
@@ -164,7 +178,7 @@ const getValue = async (dataSet, attr, vr, getDataSet, callback, options) => {
         // sequences
         const result = [];
         for(const item of attr.items) {
-            const subResult = await getDataSet(item.dataSet, callback, options)
+            const subResult = await getDataSet(item.dataSet, callback, options, attr);
             if( subResult.metadata ) result.push(subResult.metadata);
         }
         return result

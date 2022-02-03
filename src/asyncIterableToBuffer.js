@@ -12,6 +12,11 @@ const handler = {
       console.log('New call to', key);
       obj._keys[key] = true;
     }
+    // if function, ensure context is present.
+    if(typeof obj[key] === 'function') {
+      return obj[key].bind(obj)
+    }
+    
     return obj[key];
   },
 

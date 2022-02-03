@@ -96,7 +96,11 @@ const ImageExtract = [
 ];
 
 const addHash = (data, type) => {
-    if (data[DeduppedHash]) return data[DeduppedHash].Value[0];
+    
+    if (data[DeduppedHash] && data[DeduppedHash].Value) {
+        return data[DeduppedHash].Value[0];
+    };
+
     const hashValue = hasher.hash(data);
     if (!data[DeduppedHash]) {
         data[DeduppedTag] = { vr: 'CS', Value: [DeduppedCreator] };
