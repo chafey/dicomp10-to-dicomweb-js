@@ -1,9 +1,9 @@
-const Stats = require("./stats");
+const Stats = require('./stats');
 
 const BufferStats = new Stats('BufferStats', 'Buffer Statistics', Stats.StudyStats);
 
 const handler = {
-  get: function (obj, key) {
+  get(obj, key) {
     const ikey = parseInt(key);
     if (ikey == key) return obj.index_get(ikey);
     const handlerFunc = handler[key];
@@ -15,30 +15,30 @@ const handler = {
     return obj[key];
   },
 
-  length: obj => obj.combinedLength,
+  length: (obj) => obj.combinedLength,
 };
 
 const StreamingFunctions = {
-  addChunks: function (chunks) {
+  addChunks(chunks) {
     if (!this.chunks) this.chunks = [];
-    chunks.forEach(chunk => this.chunks.push(chunk));
+    chunks.forEach((chunk) => this.chunks.push(chunk));
     this.combinedLength = 0;
     let i = 0;
-    this.chunks.forEach(chunk => {
+    this.chunks.forEach((chunk) => {
       chunk.start = this.combinedLength;
       chunk.i = i++;
-      (this.combinedLength += chunk.length)
+      (this.combinedLength += chunk.length);
     });
     this.lastChunk = this.chunks[0];
   },
 
-  index_get: function (ikey) {
+  index_get(ikey) {
     const found = this.findChunk(ikey);
-    if (!found) throw Error(`index ${ikey} not found between 0..${this.combinedLength}`)
+    if (!found) throw Error(`index ${ikey} not found between 0..${this.combinedLength}`);
     return found[ikey - found.start];
   },
 
-  findChunk: function (ikey) {
+  findChunk(ikey) {
     let i = this.lastChunk.start <= ikey && this.lastChunk.i || 0;
     while (i < this.chunks.length) {
       const chunk = this.chunks[i];
@@ -50,25 +50,27 @@ const StreamingFunctions = {
     }
   },
 
-  slice: function (start, end) {
+  slice(start, end) {
     const buflen = end - start;
     const ret = Buffer.alloc(buflen);
     let i = 0;
     while (i < buflen) {
       const chunk = this.findChunk(start + i);
-      const chunkI = start + i - chunk.start
-      const useLen = Math.min(buflen,chunk.length-chunkI)
-      chunk.copy(ret,i,chunkI,chunkI+useLen);
+      const chunkI = start + i - chunk.start;
+      const useLen = Math.min(buflen, chunk.length - chunkI);
+      chunk.copy(ret, i, chunkI, chunkI + useLen);
       i += useLen;
     }
     return ret;
   },
 
-  hexSlice: function(start,end) {
-    return this.slice(start,end).hexSlice();
+  hexSlice(start, end) {
+    return this.slice(start, end).hexSlice();
   },
 
-  _keys: { then: true, lastChunk: true, slice: true, findChunk: true, chunks: true, index_get: true },
+  _keys: {
+    then: true, lastChunk: true, slice: true, findChunk: true, chunks: true, index_get: true,
+  },
 
 };
 
@@ -77,16 +79,16 @@ const StreamingBuffer = (chunks) => {
   Object.assign(buf, StreamingFunctions);
   buf.addChunks(chunks);
   return new Proxy(buf, handler);
-}
+};
 
 const asyncIteratorToBuffer = async (readable) => {
-  const chunks = []
-  for await (let chunk of readable) {
-    chunks.push(chunk)
-    BufferStats.add('Read Async', `Read async buffer ${chunks.length}`,1024);
+  const chunks = [];
+  for await (const chunk of readable) {
+    chunks.push(chunk);
+    BufferStats.add('Read Async', `Read async buffer ${chunks.length}`, 1024);
   }
   BufferStats.reset();
-  return StreamingBuffer(chunks)
-}
+  return StreamingBuffer(chunks);
+};
 
-module.exports = asyncIteratorToBuffer
+module.exports = asyncIteratorToBuffer;

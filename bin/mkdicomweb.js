@@ -3,9 +3,9 @@
 const { main } = require('../src');
 
 const defaults = {
-    isStudyData: true,
-    isGroup: true,
+  isStudyData: true,
+  isGroup: true,
 };
 main(defaults).then(() => {
-    console.log('done')
+  console.log('done');
 });
