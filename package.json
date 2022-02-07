@@ -1,6 +1,6 @@
 {
   "name": "dicomp10-to-dicomweb",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Library to convert DICOMP10 to DICOMweb format",
   "main": "src/index.js",
   "directories": {
