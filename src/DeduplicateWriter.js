@@ -9,7 +9,8 @@ const TagLists = require('./TagLists');
 
 const writeDeduplicatedFile = async (dir, data, hashValue) => {
     if( !hashValue ) hashValue = hasher.hash(data);
-    await JSONWriter(dir, hashValue, data, {gzip:true });
+    // Write it direct in the deduplicated directory, not as a sub-directory or index file
+    await JSONWriter(dir, hashValue, data, {gzip:true, index: false });
     return hashValue;
 }
 

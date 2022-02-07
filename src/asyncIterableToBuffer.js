@@ -80,6 +80,7 @@ const StreamingBuffer = (chunks) => {
 }
 
 const asyncIteratorToBuffer = async (readable) => {
+  if( ArrayBuffer.isView(readable) ) return readable;
   const chunks = []
   for await (let chunk of readable) {
     chunks.push(chunk)

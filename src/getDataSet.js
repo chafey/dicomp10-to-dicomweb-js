@@ -36,7 +36,7 @@ const getDataSet = async (dataSet, callback, options) => {
         await attributeToJS(metadata, tag, dataSet, attr, callback, options)
     }
     if( metadata[Tags.TransferSyntaxUID] ) {
-        // console.log(`Found tsuid ${metadata[Tags.TransferSyntaxUID]} assigning to ${Tags.AvailableTransferSyntaxUID}`)
+        // console.log(`Found tsuid ${JSON.stringify(metadata[Tags.TransferSyntaxUID])} assigning to ${Tags.AvailableTransferSyntaxUID}`)
         metadata[Tags.AvailableTransferSyntaxUID] = metadata[Tags.TransferSyntaxUID];
         delete metadata[Tags.TransferSyntaxUID];
     }

@@ -35,7 +35,6 @@ class StudyData {
 
     constructor({ studyInstanceUid, studyPath, deduplicatedPath, deduplicatedInstancesPath}, { isGroup, }) {
         this.studyInstanceUid = studyInstanceUid;
-        console.log('Processing', studyInstanceUid);
         this.studyPath = studyPath;
         this.isGroup = isGroup;
         this.deduplicatedPath = deduplicatedPath;
@@ -303,7 +302,8 @@ class StudyData {
         studyQuery[Tags.ModalitiesInStudy] = { Value: modalitiesInStudy, vr: 'CS' };
         studyQuery[Tags.NumberOfStudyRelatedInstances] = { Value: [numberOfInstances], vr: 'IS' };
         studyQuery[Tags.NumberOfStudyRelatedSeries] = { Value: [numberOfSeries], vr: 'IS' };
-        await JSONWriter(this.studyPath, 'studies', [studyQuery]);
+        // Write the index.json directly in the studyPath directory.
+        await JSONWriter(this.studyPath, 'index.json', [studyQuery], {gzip:true, index:false});
 
         const infoItem = this.createInfo();
         console.log('Writing deduplicated study data with', Object.values(this.extractData).length,
@@ -341,7 +341,7 @@ data[Tags.DeduppedRef] = {vr:'CS', Value:
           Object.keys(this.readHashes).filter(hash => this.deduplicatedHashes[hashValue]==undefined )
         };
         await JSONWriter(this.deduplicatedPath, hashValue, 
-            [data,...Object.values(this.extractData),...this.deduplicated]);
+            [data,...Object.values(this.extractData),...this.deduplicated], {gzip:true, index:false});
     }
 }
 
