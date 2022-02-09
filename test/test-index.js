@@ -1,7 +1,7 @@
 const StaticWado = require('../src/index')
 const assert = require('assert')
 const fs = require('fs')
-
+console.log('Start of tests');
 describe('index', async() => {
     let dicomp10stream
 

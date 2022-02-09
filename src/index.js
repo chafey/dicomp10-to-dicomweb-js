@@ -26,7 +26,8 @@ const {
 
 const OverallStats = new Stats('OverallStats', 'Overall statistics');
 const StudyStats = new Stats('StudyStats', 'Study Generation', OverallStats);
-const handleHomeRelative = dirName => dirName[0] == '~' ? (path.join(homedir, dirName.substring(1))) : dirName;
+console.log(`homedir=${homedir}`)
+const handleHomeRelative = (dirName) => (dirName[0] == '~' ? (path.join(homedir, dirName.substring(1))) : dirName);
 
 class StaticWado {
     constructor(defaults) {
@@ -44,11 +45,11 @@ class StaticWado {
         recompress,
         contentType,
         colourContentType,
-        dir,
-        pathDeduplicated,
-        pathInstances,
+        dir = "~/dicomweb",
+        pathDeduplicated = "deduplicated",
+        pathInstances = "instances",
         removeDeduplicatedInstances,
-        verbose,
+        verbose = false,
       } = program.opts();
 
       dicomCodec.setConfig({ verbose });
