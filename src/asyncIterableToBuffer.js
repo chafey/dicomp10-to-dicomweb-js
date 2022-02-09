@@ -12,7 +12,6 @@ const handler = {
       console.log('New call to', key);
       obj._keys[key] = true;
     }
-
     return obj[key];
   },
 

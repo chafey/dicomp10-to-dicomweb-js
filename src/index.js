@@ -1,4 +1,6 @@
-const dicomParser = require('dicom-parser')
+const dicomCodec = require('@cornerstonejs/dicom-codec');
+const dicomParser = require('dicom-parser');
+const { program } = require("commander");
 const asyncIterableToBuffer = require('./asyncIterableToBuffer')
 const getDataSet = require('./getDataSet')
 const JSONWriter = require('./JSONWriter')
@@ -12,66 +14,70 @@ const dirScanner = require('./dirScanner')
 const ScanStudy = require('./ScanStudy')
 const HashDataWriter = require('./HashDataWriter')
 const JSONReader = require('./JSONReader')
-const { getArg, hasArg, getRemainingArgs, showHelp } = require('./../src/args');
 const path = require('path');
 const homedir = require('os').homedir();
-
-const dicomwebDefaultDir = '~/dicomweb';
 const Stats = require('./stats');
-const VideoWriter = require('./VideoWriter')
+const VideoWriter = require('./VideoWriter');
+const {
+  transcodeImageFrame,
+  transcodeId,
+  transcodeMetadata,
+} = require("./transcodeImage");
+
 const OverallStats = new Stats('OverallStats', 'Overall statistics');
 const StudyStats = new Stats('StudyStats', 'Study Generation', OverallStats);
 const handleHomeRelative = dirName => dirName[0] == '~' ? (path.join(homedir, dirName.substring(1))) : dirName;
 
 class StaticWado {
     constructor(defaults) {
-        const directoryName = handleHomeRelative(getArg('-d', '--directory', dicomwebDefaultDir, 'Set output directory (~/dicomweb)'))
-        const isDeduplicate = hasArg('-e', '--deduplicate', defaults.isDeduplicate, 'Write deduplicate instance level data')
-        const isStudyData = hasArg('-s', '--study', defaults.isStudyData, 'Write study metadata - on provided instances only (TO FIX)')
-        const isGroup = hasArg('-g', '--group', defaults.isGroup, 'Write combined deduplicate data')
-        const isInstanceMetadata = hasArg('-i', '--instances', defaults.isInstanceMetadata, 'Write instance metadata')
-        const removeDeduplicatedInstances = hasArg(null, '--removeDeduplicatedInstances', defaults.removeDeduplicatedInstances,
-            'Remove single instance deduplicated files after writing group files.')
-        const maximumInlinePublicLength = getArg('-m', '--maximumInlinePublicLength', 128 * 1024 + 2, 'Maximum length of public binary data')
-        const maximumInlinePrivateLength = getArg(null, '--maximumInlinePrivateLength', 64, 'Maximum length of private binary data')
-        const colourContentType = getArg(null, '--colourContentType', null, 'Colour content type')
-        const contentType = getArg('-c', '--contentType', null, 'Content type')
-        const deduplicatedRoot = getArg(null, '--deduplicatedRoot', path.join(directoryName, 'deduplicated'), 'Set the deduplicate data directory');
-        const deduplicatedInstancesRoot = getArg(null, '--deduplicatedInstances', path.join(directoryName, 'instances'),
-            'Set the deduplicate instances root directory');
-        const isClean = hasArg(null, '--clean', defaults.clean, 'Clean the study output directory for these instances')
-        const recompressType = getArg(null, '--recompress', 'uncompressed,j2k,j2p', 'List of types to recompress')
-        const { scanStudies } = defaults;
-        const verbose = hasArg('-v', '--verbose', false, 'Write verbose output')
 
-        const isHelp = hasArg('-h', '--help', false, 'Print help');
+      const { scanStudies } = defaults;
 
-        this.files = getRemainingArgs();
-        if (isHelp) {
-            showHelp(
-                defaults.helpShort || 'mkdicomweb (options) <inputfiles>',
-                defaults.helpLong ||
-                'Make DICOMweb query and metadata from binary Part 10 DICOM files.  Does a full read of\n' +
-                'deduplicated files each time a study instance UID is found, and only updates those studies\n' +
-                'having at least one ');
-            process.exit(0);
-        }
+      const {
+        maximumInlinePublicLength,
+        maximumInlinePrivateLength,
+        group: isGroup,
+        instances: isInstanceMetadata,
+        deduplicate: isDeduplicate,
+        study: isStudyData,
+        clean: isClean,
+        recompress,
+        contentType,
+        colourContentType,
+        dir,
+        pathDeduplicated,
+        pathInstances,
+        removeDeduplicatedInstances,
+        verbose,
+      } = program.opts();
 
-        this.options = {
-            TransferSyntaxUID: '1.2.840.10008.1.2',
-            maximumInlinePublicLength, maximumInlinePrivateLength,
-            isGroup, isInstanceMetadata, isDeduplicate,
-            isStudyData, isClean,
-            recompressType, contentType, colourContentType,
-            directoryName,
-            deduplicatedRoot,
-            deduplicatedInstancesRoot,
-            removeDeduplicatedInstances,
-            scanStudies,
-            verbose,
-        }
+      dicomCodec.setConfig({ verbose });
 
-        this.callback = {
+      const directoryName = handleHomeRelative(dir);
+
+      this.options = {
+        TransferSyntaxUID: '1.2.840.10008.1.2',
+        maximumInlinePublicLength,
+        maximumInlinePrivateLength,
+        isGroup,
+        isInstanceMetadata,
+        isDeduplicate,
+        isStudyData,
+        isClean,
+        recompressType: recompress || "",
+        contentType,
+        colourContentType,
+        directoryName,
+        deduplicatedRoot: path.join(directoryName, pathDeduplicated),
+        deduplicatedInstancesRoot: path.join(directoryName, pathInstances),
+        removeDeduplicatedInstances,
+        scanStudies,
+        verbose,
+      };
+
+      // currently there is only one type of args, so all arg values mean input data (directories/files)
+      this.input = program.args;
+      this.callback = {
             uids: IdCreator(this.options),
             bulkdata: HashDataWriter(this.options),
             imageFrame: ImageFrameWriter(this.options),
@@ -138,26 +144,37 @@ class StaticWado {
             seriesInstanceUid: dataSet.string('x0020000e'),
             sopInstanceUid: dataSet.string('x00080018'),
             transferSyntaxUid: dataSet.string('x00020010')
-        })
+        });
 
-        let bulkDataIndex = 0
-        let imageFrameIndex = 0
+        const targetId = transcodeId(id, this.options);
+
+        let bulkDataIndex = 0;
+        let imageFrameIndex = 0;
         const generator = {
-            bulkdata: async (bulkData) =>
-                await this.callback.bulkdata(id, bulkDataIndex++, bulkData),
-            imageFrame: async (imageFrame) =>
-                await this.callback.imageFrame(id, imageFrameIndex++, imageFrame),
-            videoWriter: async (dataSet) =>
-                await this.callback.videoWriter(id, dataSet),
-        }
+          bulkdata: async (bulkData) => this.callback.bulkdata(targetId, bulkDataIndex++, bulkData),
+          imageFrame: async (originalImageFrame) => {
+            const { imageFrame, id: transcodedId } = await transcodeImageFrame(
+              id,
+              targetId,
+              originalImageFrame,
+              dataSet,
+              this.options
+            );
+
+            return this.callback.imageFrame(transcodedId, imageFrameIndex++, imageFrame);
+          },
+          videoWriter: async (_dataSet) => this.callback.videoWriter(id, _dataSet)
+        };
 
         // convert to DICOMweb MetaData and BulkData
         const result = await getDataSet(dataSet, generator, this.options);
 
-        await this.callback.metadata(id, result.metadata)
+        const transcodedMeta = transcodeMetadata(result.metadata, id, this.options);
+
+        await this.callback.metadata(targetId, transcodedMeta);
 
         // resolve promise with statistics
-        return {}
+        return {};
     }
 
 
@@ -169,9 +186,9 @@ class StaticWado {
     async main() {
         if (this.options.scanStudies) {
             // Scan one of the study directories - in this case, files is a set of study directories
-            await this.processStudyDir(this.files, this.options);
+            await this.processStudyDir(this.input, this.options);
         } else {
-            await this.processFiles(this.files, this.options);
+            await this.processFiles(this.input, this.options);
         }
         await this.close();
     }

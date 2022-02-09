@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const StaticWado = require('../src')
+const { configureServerProgram } = require("../src/program");
 const Stats = require('../src/stats');
 
 const dcmjsDimse = require('dcmjs-dimse');
@@ -49,6 +50,9 @@ const PreferredTransferSyntax = [
 const defaults = {
   isStudyData: true,
   isGroup: true,
+  helpShort: "dicomwebscp",
+  helpDescription:
+    "Creates server to receive data on DIMSE and store it DICOM",
 };
 
 class DcmjsDimseScp extends Scp {
@@ -146,6 +150,9 @@ class DcmjsDimseScp extends Scp {
     this.sendAssociationReleaseResponse();
   }
 }
+
+// Configure program commander
+configureServerProgram(defaults);
 
 const server = new Server(DcmjsDimseScp);
 server.on('networkError', (e) => {

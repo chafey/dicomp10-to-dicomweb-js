@@ -2,9 +2,9 @@ const getVR = require('./getVR')
 const getValue = require('./getValue')
 const Tags = require('./Tags')
 
-const attributeToJS = async (metadata, tag, dataSet, attr, callback, options) => {
+const attributeToJS = async (metadata, tag, dataSet, attr, callback, options, parentAttr) => {
     const vr = getVR(attr)
-    const value = await getValue(dataSet, attr, vr, getDataSet, callback, options)
+    const value = await getValue(dataSet, attr, vr, getDataSet, callback, options, parentAttr)
     const key = tag.substring(1).toUpperCase();
     if (value == undefined || value.length == 0) {
         metadata[key] = {
@@ -23,7 +23,18 @@ const attributeToJS = async (metadata, tag, dataSet, attr, callback, options) =>
     }
 }
 
-const getDataSet = async (dataSet, callback, options) => {
+/**
+ * Get dataset.
+ * 
+ * ParentAttr is used to control root/non-root attr scenarios (such as pixel data).
+ * 
+ * @param {*} dataSet 
+ * @param {*} callback 
+ * @param {*} options 
+ * @param {*} parentAttr Parent reference for sequence element tags.
+ * @returns 
+ */
+const getDataSet = async (dataSet, callback, options, parentAttr = undefined) => {
     const metadata = {}
 
     // iterate over dataSet attributes in order
@@ -33,7 +44,7 @@ const getDataSet = async (dataSet, callback, options) => {
             continue;
         }
         const attr = dataSet.elements[tag]
-        await attributeToJS(metadata, tag, dataSet, attr, callback, options)
+        await attributeToJS(metadata, tag, dataSet, attr, callback, options, parentAttr)
     }
     if( metadata[Tags.TransferSyntaxUID] ) {
         // console.log(`Found tsuid ${JSON.stringify(metadata[Tags.TransferSyntaxUID])} assigning to ${Tags.AvailableTransferSyntaxUID}`)

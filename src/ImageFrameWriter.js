@@ -14,7 +14,13 @@ const ImageFrameWriter = options => {
         await writeStream.write(contentType);
         // await writeStream.write(`Content-Length: ${imageFrame.length}\r\n\r\n`);
         await writeStream.write('\r\n');
-        await writeStream.write(imageFrame);
+
+        // node api accepts writing from Uint8Array or Buffer
+        if(imageFrame instanceof Uint8Array) {
+            await writeStream.write(imageFrame);
+        } else {
+            await writeStream.write(Buffer.from(imageFrame.buffer));
+        }
         await writeStream.write('\r\n--BOUNDARY_FIXED_32934857949532587--');
         await writeStream.close();
         if( verbose ) console.log('Wrote image frame', id.sopInstanceUid, index + 1)
