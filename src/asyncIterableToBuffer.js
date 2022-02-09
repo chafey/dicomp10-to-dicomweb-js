@@ -12,6 +12,7 @@ const handler = {
       console.log('New call to', key);
       obj._keys[key] = true;
     }
+
     return obj[key];
   },
 
@@ -57,20 +58,35 @@ const StreamingFunctions = {
     while (i < buflen) {
       const chunk = this.findChunk(start + i);
       const chunkI = start + i - chunk.start
-      const useLen = Math.min(buflen,chunk.length-chunkI)
-      chunk.copy(ret,i,chunkI,chunkI+useLen);
+      const useLen = Math.min(buflen, chunk.length - chunkI)
+      chunk.copy(ret, i, chunkI, chunkI + useLen);
       i += useLen;
     }
     return ret;
   },
 
-  hexSlice: function(start,end) {
-    return this.slice(start,end).hexSlice();
+  hexSlice: function (start, end) {
+    return this.slice(start, end).hexSlice();
   },
 
-  _keys: { then: true, lastChunk: true, slice: true, findChunk: true, chunks: true, index_get: true },
+  /** The internal node copy function is a native that directly accesses internal class details, so over-ride it.
+   * TODO: Make this efficient by using the internal copy function when available rather than copy one at a time.
+   */
+  copy: function (target, targetStart = 0, srcStart = 0, srcEnd) {
+    const { length } = target;
+    const srcLength = srcEnd === undefined && Math.min(this.length, srcEnd) || this.length;
+    let copied = 0;
+    while (targetStart < length && srcStart < srcLength) {
+      target[targetStart++] = this[srcStart++];
+    }
+    return copied;
+  },
+
+  _keys: { then: true, },
 
 };
+
+Object.keys(StreamingFunctions).forEach( key => StreamingFunctions._keys[key] = true);
 
 const StreamingBuffer = (chunks) => {
   const buf = Buffer.from('NotUsed');
@@ -80,11 +96,11 @@ const StreamingBuffer = (chunks) => {
 }
 
 const asyncIteratorToBuffer = async (readable) => {
-  if( ArrayBuffer.isView(readable) ) return readable;
+  if (ArrayBuffer.isView(readable)) return readable;
   const chunks = []
   for await (let chunk of readable) {
     chunks.push(chunk)
-    BufferStats.add('Read Async', `Read async buffer ${chunks.length}`,1024);
+    BufferStats.add('Read Async', `Read async buffer ${chunks.length}`, 1024);
   }
   BufferStats.reset();
   return StreamingBuffer(chunks)
