@@ -56,6 +56,7 @@
     "commander": "^8.3.0",
     "dcmjs-dimse": "^0.0.14",
     "dicom-parser": "^1.8.13",
+    "express": "^4.17.2",
     "hash-object": "^0.1.7",
     "node-object-hash": "^2.3.10",
     "object-hash": "^2.2.0"
