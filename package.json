@@ -16,7 +16,7 @@
     "staticwadojs": "bin/mkdicomweb.js"
   },
   "scripts": {
-    "test": "mocha --recursive --trace-warnings --unhandled-rejections=strict"
+    "test": "git submodule update --init && mocha --recursive --trace-warnings --unhandled-rejections=strict"
   },
   "repository": {
     "type": "git",
