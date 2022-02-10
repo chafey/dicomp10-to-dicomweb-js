@@ -58,6 +58,7 @@
     "dicom-parser": "^1.8.13",
     "express": "^4.17.2",
     "hash-object": "^0.1.7",
+    "morgan": "^1.10.0",
     "node-object-hash": "^2.3.10",
     "object-hash": "^2.2.0"
   }
