@@ -3,16 +3,20 @@ import logger from 'morgan'
 
 
 const qidoMap = (req,res,next) => {
-    console.log('QIDO request', req.path, req.url);
     req.url = req.path + '/index.json.gz'
     res.setHeader('content-type', 'application/json');
     next();
 };
 
-const qidoMapPost = (req,res,next) => {
-    console.log('QIDO request post', req.path);
-    next()
-};
+const otherJsonMap = (req,res,next) => {
+    res.setHeader('content-type', 'application/json');
+    req.url = req.path + '.gz'
+}
+
+const missingMap = (req,res,next) => {
+    console.log('Not found', req.path)
+    res.status(404).send(`Couldn't find ${req.path} in studyUID ${req.params.studyUID} - TODO, query remote with params=${JSON.stringify(req.params)} and query=${JSON.stringify(req.query)}`)
+}
 
 const gzipHeaders = (res, path, stat) => {
   if (path.indexOf('.gz') !== -1) {
@@ -31,14 +35,19 @@ const methods = {
 
         router.get('/studies', qidoMap);
         router.get('/studies/:studyUID/series',qidoMap);
+        router.get('/studies/:studyUID/series/metadata',otherJsonMap);
         router.get('/studies/:studyUID/series/:seriesUID/instances',qidoMap);
+
         // Handle the QIDO queries
         router.use(express.static(dir, {
             index: 'index.json.gz',
             setHeaders: gzipHeaders,
             extensions: ['gz'],
             redirect: false,
+            fallthrough: true,
         }));
+
+        router.use('/studies/:studyUID/', missingMap);        
     },
 
     addClient: function(dir, params = {}) {
