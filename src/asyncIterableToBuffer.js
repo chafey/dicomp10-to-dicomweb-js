@@ -99,7 +99,7 @@ const asyncIteratorToBuffer = async (readable) => {
   const chunks = []
   for await (let chunk of readable) {
     chunks.push(chunk)
-    BufferStats.add('Read Async', `Read async buffer ${chunks.length}`, 1024);
+    BufferStats.add('Read Async', `Read async buffer ${chunks.length}`, 16384);
   }
   BufferStats.reset();
   return StreamingBuffer(chunks)
