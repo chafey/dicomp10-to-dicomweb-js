@@ -6,7 +6,7 @@ describe('asyncIterableToBuffer', async() => {
     let dicomp10stream
 
     beforeEach(async() => {
-        dicomp10stream = fs.createReadStream('/dicom/2_skull_ct/DICOM/I10');
+        dicomp10stream = fs.createReadStream('testdata/dcm/Juno/1.3.6.1.4.1.25403.345050719074.3824.20170125113606.8');
     })
 
     it('copies child elements correctly', async () => {
