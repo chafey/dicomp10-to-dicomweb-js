@@ -6,7 +6,7 @@ describe('asyncIterableToBuffer', async() => {
     let dicomp10stream
 
     beforeEach(async() => {
-        dicomp10stream = fs.createReadStream('/dicom/2_skull_ct/DICOM/I10');
+        dicomp10stream = fs.createReadStream('testdata/dcm/Juno/1.3.6.1.4.1.25403.345050719074.3824.20170125113420.3');
     })
 
     it('copies child elements correctly', async () => {
@@ -21,9 +21,9 @@ describe('asyncIterableToBuffer', async() => {
 
     it('re-assembles buffers correctly', async () => {
         const buffer = await asyncIteratorToBuffer(dicomp10stream);
-        const len = 181916;
         const start = 3215+8;
-
+        const len = 526728-start;
+        
         console.log('Slice buffer test')
         const subBuffer = buffer.slice(start,start+len);
         for(let i=0; i<len; i++) {

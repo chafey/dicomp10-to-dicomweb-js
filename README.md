@@ -1,4 +1,4 @@
-# dicomp10-to-dicomweb-js
+# static-wado-js
 
 Status: Beta - in development (as of Oct 25, 2021)
 
@@ -32,15 +32,16 @@ View [specification](docs/spec.md)
 
 * NodeJS (v14.18.1 used but earlier/later versions should also)
 * NPM
+* Yarn
 
 ## Running Unit Tests
 
-> npm run test
+> yarn run test
 
 A visual studio code build task is also included so you can run it from there with "Terminal->Run Build Task" (Shift+Command+B)
 
 ## Running the CLI
-Install the CLI with either npm install -g .  or npm install -g dicomp10-to-dicomweb
+Install the CLI with either npm install -g .  or npm install -g @ohif/static-wado-js
 
 ### Api
 There are 5 different commands: mkdicomweb, mkdicomwebinstances, mkdicomwebstudy, mkdicomwebdeduplicated, mkdicomwebdeduplicatedgroup that can be used (see usage bellow). It can be run as:
