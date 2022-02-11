@@ -15,9 +15,9 @@ const ScanStudy = require('./ScanStudy')
 const HashDataWriter = require('./HashDataWriter')
 const JSONReader = require('./JSONReader')
 const path = require('path');
-const homedir = require('os').homedir();
 const Stats = require('./stats');
 const VideoWriter = require('./VideoWriter');
+const {handleHomeRelative} = require('./utils/index.js')
 const {
   transcodeImageFrame,
   transcodeId,
@@ -26,8 +26,6 @@ const {
 
 const OverallStats = new Stats('OverallStats', 'Overall statistics');
 const StudyStats = new Stats('StudyStats', 'Study Generation', OverallStats);
-console.log(`homedir=${homedir}`)
-const handleHomeRelative = (dirName) => (dirName[0] == '~' ? (path.join(homedir, dirName.substring(1))) : dirName);
 
 class StaticWado {
     constructor(defaults) {
