@@ -16,6 +16,7 @@ const otherJsonMap = (req,res,next) => {
 const missingMap = (req,res,next) => {
     console.log('Not found', req.path)
     res.status(404).send(`Couldn't find ${req.path} in studyUID ${req.params.studyUID} - TODO, query remote with params=${JSON.stringify(req.params)} and query=${JSON.stringify(req.query)}`)
+    next();
 }
 
 const gzipHeaders = (res, path, stat) => {
@@ -33,7 +34,11 @@ const methods = {
         const router = express.Router();
         this.use(path,router);
 
-        router.get('/studies', qidoMap);
+        if( this.plugins.retrievePreCheck ) {
+            router.use('/studies/:studyUID',this.plugins.retrievePreCheck);
+        }
+
+        router.get('/studies', this.plugins.studyQuery || qidoMap);
         router.get('/studies/:studyUID/series',qidoMap);
         router.get('/studies/:studyUID/series/metadata',otherJsonMap);
         router.get('/studies/:studyUID/series/:seriesUID/instances',qidoMap);
@@ -47,7 +52,9 @@ const methods = {
             fallthrough: true,
         }));
 
-        router.use('/studies/:studyUID/', missingMap);        
+        if( this.plugins.retrieveMissing ) {
+            router.use('/studies/:studyUID/', this.plugins.retrieveMissing);
+        }        
     },
 
     addClient: function(dir, params = {}) {
@@ -74,6 +81,9 @@ const DicomWebServer = (params) => {
 
     app.use(logger("combined"))
     app.params = params || {};
+    app.plugins = loadPlugins(params);
+
+    // Iterate through params, add webservices based on params
 
     const superListen = app.listen;
     app.listen = (port) => {
