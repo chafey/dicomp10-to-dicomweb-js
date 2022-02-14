@@ -102,3 +102,9 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Build directory
+build/
+
+# vs code workspaces
+*.code-workspace
